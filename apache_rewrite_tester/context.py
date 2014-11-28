@@ -1,6 +1,7 @@
 import collections
 
 import enum
+import re
 
 __author__ = 'jwilner'
 
@@ -57,8 +58,32 @@ class RuleBackreference(Backreference):
 
 
 class MapExpansion(collections.Hashable):
+    REGEX = re.compile(r"""
+                       ^(?P<map_name>\w+):
+                       (?P<lookup_key>\w+)
+                       (?:\|(?P<default>\w+))
+                       """, re.VERBOSE)
+
+    @classmethod
+    def from_string(cls, string):
+        match = cls.REGEX.match(string)
+        if match is None:
+            return None
+
+        return cls(**match.groupdict())
+
+    def __init__(self, map_name, lookup_key, default):
+        """
+        :type map_name: str
+        :type lookup_key: str
+        :type default: str
+        """
+        self.map_name = map_name
+        self.lookup_key = lookup_key
+        self.default = default
+
     def __hash__(self):
-        pass
+        return hash(self.map_name + self.lookup_key)
 
 
 class ServerVariableType(enum):

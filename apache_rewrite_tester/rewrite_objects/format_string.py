@@ -9,7 +9,7 @@ __author__ = 'jwilner'
 class FormatString(object):
     COMPONENTS = (re.compile(r"^\$(\d)"), RuleBackreference.from_string),\
         (re.compile(r"^%(\d)"), CondBackreference.from_string),\
-        (re.compile(r"^\$\{(.+?)\}"), MapExpansion),\
+        (re.compile(r"^\$\{(.+?)\}"), MapExpansion.from_string),\
         (re.compile(r"^%\{(.+?)\}"), ServerVariable.get)
 
     @classmethod
