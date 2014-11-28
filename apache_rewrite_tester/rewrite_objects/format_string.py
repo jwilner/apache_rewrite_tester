@@ -14,6 +14,10 @@ class FormatString(object):
 
     @classmethod
     def parse(cls, string):
+        """
+        :type string: str
+        :rtype: FormatString
+        """
         return cls(cls._parse(string))
 
     @classmethod
