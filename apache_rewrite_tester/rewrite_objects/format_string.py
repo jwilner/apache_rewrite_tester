@@ -7,7 +7,7 @@ from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 __author__ = 'jwilner'
 
 
-class TestString(RewriteObject):
+class FormatString(RewriteObject):
     COMPONENTS = (re.compile(r"^\$(\d)"), RuleBackreference.from_string),\
         (re.compile(r"^%(\d)"), CondBackreference.from_string),\
         (re.compile(r"^\$\{(.+?)\}"), MapExpansion),\
@@ -17,7 +17,7 @@ class TestString(RewriteObject):
     def _parse(cls, string):
         """
         :type string: str
-        :rtype: __generator[TestStringComponent|str]
+        :rtype: __generator[Hashable]
         """
         while string:
             for regex, parser in cls.COMPONENTS:
@@ -27,6 +27,7 @@ class TestString(RewriteObject):
                     component = parser(match.group(1))
                     break
             else:
+                # woo, python 3
                 component, *characters = string
                 string = "".join(characters)  # unpacking makes a list, so undo
 
@@ -34,7 +35,7 @@ class TestString(RewriteObject):
 
     def __init__(self, components):
         """
-        :type components: __generator[TestStringComponent|str]
+        :type components: __generator[Hashable]
         """
         self.components = tuple(components)
 

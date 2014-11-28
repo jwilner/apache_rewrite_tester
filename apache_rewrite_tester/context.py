@@ -1,9 +1,13 @@
+import collections
+
 import enum
 
 __author__ = 'jwilner'
 
 
-class Backreference(object):
+class Backreference(collections.Hashable):
+    MAXIMUM_INDEX = 10  # exclusive
+
     @classmethod
     def from_string(cls, string):
         """
@@ -12,11 +16,36 @@ class Backreference(object):
         """
         return cls(int(string))
 
+    @classmethod
+    def update_context(cls, match, context):
+        """
+        :type match: __Match
+        :type context: MutableMapping
+        """
+        for index in range(cls.MAXIMUM_INDEX):
+            backreference = cls(index)
+            try:
+                group = match.group(index)
+                context[backreference] = group
+            except IndexError:
+                # unset old backreferences
+                try:
+                    del context[backreference]
+                except KeyError:
+                    # won't be any for higher indices
+                    break
+
     def __init__(self, index):
         """
         :type index: int
         """
         self.index = index
+
+    def __hash__(self):
+        """
+        :rtype: int
+        """
+        return self.index
 
 
 class CondBackreference(Backreference):
@@ -27,8 +56,9 @@ class RuleBackreference(Backreference):
     pass
 
 
-class MapExpansion(object):
-    pass
+class MapExpansion(collections.Hashable):
+    def __hash__(self):
+        pass
 
 
 class ServerVariableType(enum):
@@ -99,8 +129,12 @@ class ServerVariable(enum):
         self.type = variable_type
 
 
-class Flag(enum):
+class ApacheFlag(enum):
     def __init__(self, short_name, long_name):
+        """
+        :type short_name: str
+        :type long_name: str
+        """
         self.short_name = short_name
         self.long_name = long_name
 
@@ -108,7 +142,7 @@ class Flag(enum):
     def __call__(cls, string):
         """
         :type string: str
-        :rtype: Flag
+        :rtype: ApacheFlag
         """
         for flag in cls:
             if flag.short_name == string or flag.long_name == string:
@@ -120,6 +154,6 @@ class Flag(enum):
     def find_all(cls, string):
         """
         :type string: str
-        :rtype: tuple[Flag]
+        :rtype: frozenset[ApacheFlag]
         """
-        return tuple(map(cls.__call__, string.split(',')))
+        return frozenset(map(cls.__call__, string.split(',')))
