@@ -2,16 +2,19 @@ import re
 
 from apache_rewrite_tester.context import CondBackreference, \
     RuleBackreference, MapExpansion, ServerVariable
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 
 __author__ = 'jwilner'
 
 
-class FormatString(RewriteObject):
+class FormatString(object):
     COMPONENTS = (re.compile(r"^\$(\d)"), RuleBackreference.from_string),\
         (re.compile(r"^%(\d)"), CondBackreference.from_string),\
         (re.compile(r"^\$\{(.+?)\}"), MapExpansion),\
         (re.compile(r"^%\{(.+?)\}"), ServerVariable.get)
+
+    @classmethod
+    def parse(cls, string):
+        return cls(cls._parse(string))
 
     @classmethod
     def _parse(cls, string):
@@ -39,7 +42,7 @@ class FormatString(RewriteObject):
         """
         self.components = tuple(components)
 
-    def to_string(self, context):
+    def format(self, context):
         """
         :type context: MutableMapping
         :rtype: str

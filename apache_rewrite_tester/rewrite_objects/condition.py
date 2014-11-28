@@ -59,7 +59,7 @@ class RewriteCondition(RewriteObject):
         :type context: MutableMapping
         :rtype: bool
         """
-        string = self.test_string.to_string(context)
+        string = self.test_string.format(context)
         context_updater = functools.partial(CondBackreference.update_context,
                                             context=context)
 

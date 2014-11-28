@@ -49,7 +49,7 @@ class RewriteRule(RewriteObject):
         if match is None:  # do not apply substitutions or flags
             return path
 
-        new_path = self.substitution.to_string(context)
+        new_path = self.substitution.format(context)
 
         self._apply_flags(context)
 
