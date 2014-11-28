@@ -21,6 +21,30 @@ class RewriteCondition(RewriteObject):
               ("cond_pattern", CondPattern.parse), \
               ("flags", ConditionFlag.find_all)
 
+    @classmethod
+    def chain(cls, rewrite_conditions, context):
+        """
+        :type rewrite_conditions: Iterable[RewriteCondition]
+        :rtype: bool
+        """
+        status = True
+        
+        for rewrite_condition in rewrite_conditions:
+            status = rewrite_condition.evaluate(context)
+
+            if ConditionFlag.OR_NEXT in rewrite_condition.flags:
+                if status:
+                    return True
+                else:
+                    continue
+
+            if not status:
+                return False
+
+        return status
+
+
+
     def __init__(self, test_string, cond_pattern, flags):
         """
         :type test_string: TestString
