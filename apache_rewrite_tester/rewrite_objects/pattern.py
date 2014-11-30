@@ -3,6 +3,7 @@ import re
 
 from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 
+
 __author__ = 'jwilner'
 
 

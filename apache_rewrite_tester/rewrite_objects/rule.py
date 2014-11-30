@@ -6,6 +6,7 @@ from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
 from apache_rewrite_tester.rewrite_objects.pattern import RegexCondPattern
 
+
 __author__ = 'jwilner'
 
 

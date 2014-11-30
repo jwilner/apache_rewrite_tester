@@ -1,5 +1,4 @@
 import collections
-
 import re
 
 import enum
@@ -47,7 +46,14 @@ class Backreference(collections.Hashable):
         """
         :rtype: int
         """
-        return self.index
+        return hash(type(self)) / hash(self.index)
+
+    def __eq__(self, other):
+        """
+        :type other: object
+        :rtype: bool
+        """
+        return type(other) is self.__class__ and other.index == self.index
 
 
 class CondBackreference(Backreference):

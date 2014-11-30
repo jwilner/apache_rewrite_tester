@@ -2,8 +2,8 @@ import functools
 import re
 
 from apache_rewrite_tester.context import ApacheFlag, CondBackreference
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
+from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.pattern import CondPattern
 
 
