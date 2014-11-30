@@ -62,7 +62,7 @@ class MapExpansion(collections.Hashable):
     REGEX = re.compile(r"""
                        ^(?P<map_name>\w+):
                        (?P<lookup_key>\w+)
-                       (?:\|(?P<default>\w+))
+                       (?:\|(?P<default>\w+))$
                        """, re.VERBOSE)
 
     @classmethod
