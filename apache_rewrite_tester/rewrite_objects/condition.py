@@ -48,7 +48,7 @@ class RewriteCondition(RewriteObject):
         """
         :type test_string: FormatString
         :type cond_pattern: CondPattern
-        :type flags: frozenset[ConditionFlag]
+        :type flags: dict[ConditionFlag, dict]
         """
         self.flags = flags
         self.test_string = test_string
@@ -71,6 +71,6 @@ class RewriteCondition(RewriteObject):
 
 
 class ConditionFlag(ApacheFlag):
-    NO_CASE = "NC", "nocase"
-    OR_NEXT = "OR", "ornext"
-    NO_VARY = "NV", "novary"
+    NO_CASE = r"^(?:NC|nocase)$",
+    OR_NEXT = r"^(?:OR|ornext)$",
+    NO_VARY = r"^(?:NV|novary)$",

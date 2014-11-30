@@ -1,7 +1,7 @@
 import functools
 import re
 
-from apache_rewrite_tester.context import ApacheFlag, RuleBackreference
+from apache_rewrite_tester.context import RuleBackreference, ApacheFlag
 from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
 from apache_rewrite_tester.rewrite_objects.pattern import RegexCondPattern
@@ -25,11 +25,11 @@ class RewriteRule(RewriteObject):
         """
         :type pattern: RegexCondPattern
         :type substitution: FormatString
-        :type flags: frozenset[RuleFlag]
+        :type flags: dict[RuleFlag, dict]
         """
-        self.flags = flags
         self.pattern = pattern
         self.substitution = substitution
+        self.flags = flags
 
     def apply(self, path, context):
         """
@@ -55,31 +55,50 @@ class RewriteRule(RewriteObject):
 
         return new_path
 
-    def _apply_flags(self, context):
-        pass
-
 
 class RuleFlag(ApacheFlag):
-    ESCAPE_NON_ALPHANUMERIC = "B", None
-    CHAIN = "C", "chain"
-    COOKIE = "CO", "cookie"
-    DISCARD_PATH_INFO = "DPI", "discardpath"
-    END = "END", None
-    ENVIRONMENT_VARIABLE = "E", "env"
-    FORBIDDEN = "F", "forbidden"
-    HANDLER = "H", "Handler"
-    LAST = "L", "last"
-    NEXT = "N", "next"
-    NO_CASE = "NC", "nocase"
-    NO_ESCAPE = "NE", "noescape"
-    NO_SUBREQUEST = "NS", "nosubreq"
-    PROXY = "P", "proxy"
-    PASSTHROUGH = "PT", "passthrough"
-    QUERY_STRING_APPEND = "QSA", "qsappend"
-    QUERY_STRING_DISCARD = "QSD", "qsdiscard"
-    REDIRECT = "R", "redirect"
-    SKIP = "S", "skip"
-    TYPE = "T", "type"
-
-
-
+    ESCAPE_BACKREFERENCES = r"^B$",
+    CHAIN = r"^(?:C|chain)$",
+    COOKIE = r"""
+             ^(?:CO|cookie)=
+             (?P<name>[^:]+)
+             :(?P<value>[^:]+)
+             :(?P<domain>[^:]+)
+             (?::(?P<lifetime>[^:]+)  # optional
+             (?::(?P<path>[^:]+)  # optional if lifetime included
+             (?::(?P<secure>[^:]+)  # optional if path included
+             (?::(?P<httponly>[^:]+)  # optional if secure included
+             )?)?)?)?
+             """, \
+        (('lifetime', int),)
+    DISCARD_PATH_INFO = r"^(?:DPI|discardpath)$",
+    ENVIRONMENT_VARIABLE = r"""
+                           ^(?:E|env)=
+                           (?:
+                           (?:(?P<variable>[^:]+):(?P<value>[^:]+))|
+                           (?:!(?P<variable_to_unset>[^:]+))
+                           )
+                           $
+                           """,
+    END = r"^END$",
+    FORBIDDEN = r"^(?:F|forbidden)$",
+    GONE = r"^(?:G|gone)$",
+    HANDLER = r"^(?:H|handler)=(?P<handler>[\w/-]+)$",
+    LAST = r"^(?:L|last)$",
+    NEXT = r"^(?:N|next)(?:=(?P<maximum>\w+))?$",
+    NO_CASE = r"^(?:NC|nocase)",
+    NO_ESCAPE = r"^(?:NE|noescape)",
+    NO_SUBREQUEST = r"^(?:NS|nosubreq)$",
+    PROXY = r"^(?:P|proxy)$",
+    PASS_THROUGH = r"^(?:PT|passthrough)$",
+    QUERY_STRING_APPEND = r"^(?:QSA|qsappend)$",
+    QUERY_STRING_DISCARD = r"^(?:QSD|qsdiscard)$",
+    REDIRECT = r"""
+               ^(?:R|redirect)=
+               (?:
+               (?P<status_code>\d{3})|
+               (?P<status_name>\w+)
+               )$""", \
+        (('status_code', int),)
+    SKIP = r"^(?:S|skip)=(?P<number>\d+)$", (('status_code', int),)
+    TYPE = r"^(?:T|type)=(?P<content_type>[\w/-]+)$",

@@ -1,5 +1,4 @@
 import collections
-import re
 
 __author__ = 'jwilner'
 

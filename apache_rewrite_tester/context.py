@@ -1,7 +1,8 @@
 import collections
 
-import enum
 import re
+
+import enum
 
 __author__ = 'jwilner'
 
@@ -155,23 +156,27 @@ class ServerVariable(enum):
 
 
 class ApacheFlag(enum):
-    def __init__(self, short_name, long_name):
+    def __init__(self, pattern, parsers=()):
         """
-        :type short_name: str
-        :type long_name: str
+        :type pattern: str
         """
-        self.short_name = short_name
-        self.long_name = long_name
+        self.pattern = re.compile(pattern, re.IGNORECASE | re.VERBOSE)
+        self.parsers = parsers
 
     @classmethod
     def __call__(cls, string):
         """
         :type string: str
-        :rtype: ApacheFlag
+        :rtype: ApacheFlag, dict
         """
         for flag in cls:
-            if flag.short_name == string or flag.long_name == string:
-                return string
+            match = flag.pattern.match(string)
+            if match is not None:
+                parsers = collections.defaultdict(str)
+                parsers.update(dict(flag.parsers))
+                arguments = {k: (parsers[k](v) if v is not None else None)
+                             for k, v in match.groupdict().items()}
+                return flag, arguments
 
         raise ValueError("{} is not a valid {}".format(string, cls.__name__))
 
@@ -179,6 +184,7 @@ class ApacheFlag(enum):
     def find_all(cls, string):
         """
         :type string: str
-        :rtype: frozenset[ApacheFlag]
+        :rtype: dict[ApacheFlag, dict]
         """
-        return frozenset(map(cls.__call__, string.split(',')))
+        return {flag: arguments for flag, arguments in
+                map(cls.__call__, string.split(','))}
