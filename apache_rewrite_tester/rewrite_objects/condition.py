@@ -10,17 +10,25 @@ from apache_rewrite_tester.rewrite_objects.pattern import CondPattern
 __author__ = 'jwilner'
 
 
+class ConditionFlag(ApacheFlag):
+    NO_CASE = r"^(?:NC|nocase)$",
+    OR_NEXT = r"^(?:OR|ornext)$",
+    NO_VARY = r"^(?:NV|novary)$",
+
+
 class RewriteCondition(RewriteObject):
     REGEX = re.compile(r"""
                        ^RewriteCond\s+
                        (?P<test_string>\S+)\s+
-                       (?P<cond_pattern>\S+)\s*?
-                       (?:\[(?P<flags>\S+)\])?\s+$
+                       (?P<cond_pattern>\S+)
+                       (?:\s+\[(?P<flags>\S+)\])?$
                        """, re.VERBOSE)
 
     PARSERS = ("test_string", FormatString.parse), \
-              ("cond_pattern", CondPattern.parse), \
+              ("cond_pattern", CondPattern.get_right_pattern), \
               ("flags", ConditionFlag.find_all)
+
+    DEFAULTS = ("flags", {}),
 
     @classmethod
     def chain(cls, rewrite_conditions, context):
@@ -52,7 +60,7 @@ class RewriteCondition(RewriteObject):
         """
         self.flags = flags
         self.test_string = test_string
-        self.condition = cond_pattern
+        self.cond_pattern = cond_pattern
 
     def evaluate(self, context):
         """
@@ -66,11 +74,5 @@ class RewriteCondition(RewriteObject):
         flags = re.IGNORECASE if ConditionFlag.NO_CASE in self.flags else 0
         compiler = functools.partial(re.compile, flags=flags)
 
-        return self.condition.match(string, regex_compiler=compiler,
-                                    match_callback=context_updater)
-
-
-class ConditionFlag(ApacheFlag):
-    NO_CASE = r"^(?:NC|nocase)$",
-    OR_NEXT = r"^(?:OR|ornext)$",
-    NO_VARY = r"^(?:NV|novary)$",
+        return self.cond_pattern.match(string, regex_compiler=compiler,
+                                       match_callback=context_updater)

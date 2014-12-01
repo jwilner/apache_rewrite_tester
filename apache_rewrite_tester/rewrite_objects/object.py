@@ -1,4 +1,3 @@
-import collections
 
 __author__ = 'jwilner'
 
@@ -6,6 +5,7 @@ __author__ = 'jwilner'
 class RewriteObject(object):
     REGEX = None
     PARSERS = ()
+    DEFAULTS = ()
 
     @classmethod
     def parse(cls, string):
@@ -29,13 +29,16 @@ class RewriteObject(object):
         if match is None:
             return None
 
-        # keep them strings if no parser
-        parsers = collections.defaultdict(str)
-        parsers.update(dict(cls.PARSERS))
+        parsers = dict(cls.PARSERS)
+        defaults = dict(cls.DEFAULTS)
 
         parsed = {}
         for name, value in match.groupdict().items():
-            parser = parsers[name]
+            if value is None:  # i.e. optional regex group
+                parsed[name] = defaults.get(name)
+                continue
+
+            parser = parsers.get(name, str)  # leave a string as default
             parsed_value = parser(value)
 
             if parsed_value is None:
@@ -43,4 +46,5 @@ class RewriteObject(object):
 
             parsed[name] = parsed_value
 
-        return cls(**parsed)
+        return parsed
+

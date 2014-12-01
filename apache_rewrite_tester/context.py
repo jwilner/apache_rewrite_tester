@@ -93,7 +93,7 @@ class MapExpansion(collections.Hashable):
         return hash(self.map_name + self.lookup_key)
 
 
-class ServerVariableType(enum):
+class ServerVariableType(enum.Enum):
     HTTP_HEADERS = 0
     CONNECTION_AND_REQUEST = 1
     SEVER_INTERNALS = 2
@@ -101,7 +101,7 @@ class ServerVariableType(enum):
     SPECIALS = 4
 
 
-class ServerVariable(enum):
+class ServerVariable(enum.Enum):
     HTTP_ACCEPT = 0, ServerVariableType.HTTP_HEADERS
     HTTP_COOKIE = 1, ServerVariableType.HTTP_HEADERS
     HTTP_FORWARDED = 2, ServerVariableType.HTTP_HEADERS
@@ -161,7 +161,7 @@ class ServerVariable(enum):
         self.type = variable_type
 
 
-class ApacheFlag(enum):
+class ApacheFlag(enum.Enum):
     def __init__(self, pattern, parsers=()):
         """
         :type pattern: str
@@ -178,9 +178,9 @@ class ApacheFlag(enum):
         for flag in cls:
             match = flag.pattern.match(string)
             if match is not None:
-                parsers = collections.defaultdict(str)
-                parsers.update(dict(flag.parsers))
-                arguments = {k: (parsers[k](v) if v is not None else None)
+                parsers = dict(flag.parsers)
+                arguments = {k: (parsers.get(k, str)(v) if v is not None
+                                 else None)
                              for k, v in match.groupdict().items()}
                 return flag, arguments
 
@@ -192,5 +192,6 @@ class ApacheFlag(enum):
         :type string: str
         :rtype: dict[ApacheFlag, dict]
         """
+        # drops empty strings
         return {flag: arguments for flag, arguments in
-                map(cls.__call__, string.split(','))}
+                map(cls.__call__, filter(bool, string.split(',')))}

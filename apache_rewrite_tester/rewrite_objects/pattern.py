@@ -8,8 +8,7 @@ __author__ = 'jwilner'
 
 
 class CondPattern(RewriteObject):
-    PATTERN_TYPES = LexicographicalCondPattern, IntegralCondPattern, \
-        RegexCondPattern
+    PRECEDENCE = None
 
     @staticmethod
     def get_right_pattern(string):
@@ -17,7 +16,9 @@ class CondPattern(RewriteObject):
         :type string: str
         :rtype: CondPattern
         """
-        for pattern_type in CondPattern.PATTERN_TYPES:
+        pattern_types = sorted(CondPattern.__subclasses__(),
+                               key=lambda cp: int(cp.PRECEDENCE))
+        for pattern_type in pattern_types:
             pattern = pattern_type.parse(string)
             if pattern is not None:
                 return pattern
@@ -37,6 +38,8 @@ class CondPattern(RewriteObject):
 class RegexCondPattern(CondPattern):
     REGEX = re.compile(r"\s*(?P<negated>!?)(?P<pattern>\S+)")
     PARSERS = ('negated', bool),
+
+    PRECEDENCE = 2
 
     def __init__(self, negated, pattern):
         """
@@ -73,11 +76,13 @@ class LexicographicalCondPattern(CondPattern):
 
     REGEX = re.compile(r"""
                        \s*(?P<negated>!?)
-                       (?P<operator>>|<|>=|<=)
+                       (?P<op>>|<|>=|<=|=)
                        (?P<body>\w*)
                        """, re.VERBOSE)
 
-    PARSERS = ("negated", bool), ("operator", OPERATOR_LOOKUP.get)
+    PARSERS = ("negated", bool), ("op", OPERATOR_LOOKUP.get)
+
+    PRECEDENCE = 1
 
     def __init__(self, negated, op, body):
         """
@@ -106,12 +111,14 @@ class IntegralCondPattern(CondPattern):
 
     REGEX = re.compile(r"""
                        \s*(?P<negated>!?)
-                       -(?P<operator>eq|ge|gt|le|lt)
+                       -(?P<op>eq|ge|gt|le|lt)
                        (?P<body>\w+)
                        """, re.VERBOSE)
 
-    PARSERS = ("negated", bool), ("operator", OPERATOR_LOOKUP.get), \
+    PARSERS = ("negated", bool), ("op", OPERATOR_LOOKUP.get), \
         ("body", int)
+
+    PRECEDENCE = 0
 
     def __init__(self, negated, op, body):
         """
