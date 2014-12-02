@@ -115,8 +115,7 @@ class IntegralCondPattern(CondPattern):
                        (?P<body>\w+)
                        """, re.VERBOSE)
 
-    PARSERS = ("negated", bool), ("op", OPERATOR_LOOKUP.get), \
-        ("body", int)
+    PARSERS = ("negated", bool), ("op", OPERATOR_LOOKUP.get), ("body", int)
 
     PRECEDENCE = 0
 

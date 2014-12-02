@@ -46,7 +46,7 @@ class Backreference(collections.Hashable):
         """
         :rtype: int
         """
-        return hash(type(self)) / hash(self.index)
+        return int(hash(type(self)) / (hash(self.index) or 1))
 
     def __eq__(self, other):
         """
@@ -96,7 +96,7 @@ class MapExpansion(collections.Hashable):
 class ServerVariableType(enum.Enum):
     HTTP_HEADERS = 0
     CONNECTION_AND_REQUEST = 1
-    SEVER_INTERNALS = 2
+    SERVER_INTERNALS = 2
     DATE_AND_TIME = 3
     SPECIALS = 4
 
@@ -125,15 +125,15 @@ class ServerVariable(enum.Enum):
     REQUEST_METHOD = 19, ServerVariableType.CONNECTION_AND_REQUEST
     SCRIPT_FILENAME = 20, ServerVariableType.CONNECTION_AND_REQUEST
 
-    DOCUMENT_ROOT = 21, ServerVariableType.SEVER_INTERNALS
-    SCRIPT_GROUP = 22, ServerVariableType.SEVER_INTERNALS
-    SCRIPT_USER = 23, ServerVariableType.SEVER_INTERNALS
-    SERVER_ADDR = 24, ServerVariableType.SEVER_INTERNALS
-    SERVER_ADMIN = 25, ServerVariableType.SEVER_INTERNALS
-    SERVER_NAME = 26, ServerVariableType.SEVER_INTERNALS
-    SERVER_PORT = 27, ServerVariableType.SEVER_INTERNALS
-    SERVER_PROTOCOL = 28, ServerVariableType.SEVER_INTERNALS
-    SERVER_SOFTWARE = 29, ServerVariableType.SEVER_INTERNALS
+    DOCUMENT_ROOT = 21, ServerVariableType.SERVER_INTERNALS
+    SCRIPT_GROUP = 22, ServerVariableType.SERVER_INTERNALS
+    SCRIPT_USER = 23, ServerVariableType.SERVER_INTERNALS
+    SERVER_ADDR = 24, ServerVariableType.SERVER_INTERNALS
+    SERVER_ADMIN = 25, ServerVariableType.SERVER_INTERNALS
+    SERVER_NAME = 26, ServerVariableType.SERVER_INTERNALS
+    SERVER_PORT = 27, ServerVariableType.SERVER_INTERNALS
+    SERVER_PROTOCOL = 28, ServerVariableType.SERVER_INTERNALS
+    SERVER_SOFTWARE = 29, ServerVariableType.SERVER_INTERNALS
 
     TIME_YEAR = 30, ServerVariableType.DATE_AND_TIME
     TIME_MON = 31, ServerVariableType.DATE_AND_TIME

@@ -33,7 +33,28 @@ class TestIntegralCondPattern(TestCase):
     CASES = ("-gt42", '43', True), ("!-gt42", '43', False), \
         ("-lt14", '3', True), ("-eq12093", '12093', True)
 
-    def test_evalutes_properly(self):
+    def test_evaluates_properly(self):
         for string, input_value, result in self.CASES:
             pattern = IntegralCondPattern.parse(string)
             self.assertIs(result, pattern.match(input_value))
+
+
+class TestLexicographicalCondPattern(TestCase):
+    CASES = ("<ab", 'aa', True), ("=aa", "aa", True), (">ab", "ac", True), \
+        ("!<ab", "aa", False), (">=ab", "ab", True)
+
+    def test_evaluates_properly(self):
+        for string, input_value, result in self.CASES:
+            pattern = LexicographicalCondPattern.parse(string)
+            self.assertIs(result, pattern.match(input_value))
+
+
+class TestRegexCondPattern(TestCase):
+    CASES = ("ab", "ab", True), ("[ab]b", "ab", True), ("a$", "ab", False), \
+        ("!a$", "ab", True)
+
+    def test_evaluates_properly(self):
+        for string, input_value, result in self.CASES:
+            pattern = RegexCondPattern.parse(string)
+            self.assertIs(result, pattern.match(input_value))
+
