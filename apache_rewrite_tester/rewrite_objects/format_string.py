@@ -30,7 +30,7 @@ class FormatString(object):
             for regex, parser in cls.COMPONENTS:
                 match = regex.match(string)
                 if match is not None:
-                    string = string[match.endpos:]
+                    string = string[match.end():]
                     component = parser(match.group(1))
                     break
             else:
