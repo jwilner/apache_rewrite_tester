@@ -63,7 +63,7 @@ class RewriteRule(RewriteObject):
                        ^RewriteRule\s+
                        (?P<pattern>\S+)\s+
                        (?P<substitution>\S+)\s*?
-                       (?:\[(?P<flags>\S+)\])?\s+$
+                       (?:\[(?P<flags>\S+)\])?\s*$
                        """, re.VERBOSE)
 
     PARSERS = ("pattern", RegexCondPattern), \
