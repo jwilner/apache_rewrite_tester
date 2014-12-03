@@ -39,7 +39,7 @@ class RuleFlag(ApacheFlag):
     GONE = r"^(?:G|gone)$",
     HANDLER = r"^(?:H|handler)=(?P<handler>[\w/-]+)$",
     LAST = r"^(?:L|last)$",
-    NEXT = r"^(?:N|next)(?:=(?P<maximum>\w+))?$",
+    NEXT = r"^(?:N|next)(?:=(?P<maximum>\w+))?$", (("maximum", int),)
     NO_CASE = r"^(?:NC|nocase)",
     NO_ESCAPE = r"^(?:NE|noescape)",
     NO_SUBREQUEST = r"^(?:NS|nosubreq)$",
@@ -54,7 +54,7 @@ class RuleFlag(ApacheFlag):
                (?P<status_name>\w+)
                )$""", \
         (('status_code', int),)
-    SKIP = r"^(?:S|skip)=(?P<number>\d+)$", (('status_code', int),)
+    SKIP = r"^(?:S|skip)=(?P<number>\d+)$", (('number', int),)
     TYPE = r"^(?:T|type)=(?P<content_type>[\w/-]+)$",
 
 
@@ -66,9 +66,11 @@ class RewriteRule(RewriteObject):
                        (?:\[(?P<flags>\S+)\])?\s*$
                        """, re.VERBOSE)
 
-    PARSERS = ("pattern", RegexCondPattern), \
+    PARSERS = ("pattern", RegexCondPattern.parse), \
               ("substitution", FormatString.parse), \
               ("flags", RuleFlag.find_all)
+
+    DEFAULTS = ("flags", {}),
 
     def __init__(self, pattern, substitution, flags):
         """
@@ -103,3 +105,9 @@ class RewriteRule(RewriteObject):
         self._apply_flags(context)
 
         return new_path
+
+    def _apply_flags(self, context):
+        """
+        :type context: MutableMapping
+        """
+        pass

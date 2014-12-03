@@ -170,7 +170,7 @@ class ApacheFlag(enum.Enum):
         self.parsers = parsers
 
     @classmethod
-    def __call__(cls, string):
+    def look_up(cls, string):
         """
         :type string: str
         :rtype: ApacheFlag, dict
@@ -179,9 +179,14 @@ class ApacheFlag(enum.Enum):
             match = flag.pattern.match(string)
             if match is not None:
                 parsers = dict(flag.parsers)
-                arguments = {k: (parsers.get(k, str)(v) if v is not None
-                                 else None)
-                             for k, v in match.groupdict().items()}
+
+                arguments = {}
+                for key, value in match.groupdict().items():
+                    if value is None:
+                        continue
+                    parser = parsers.get(key, str)
+                    arguments[key] = parser(value)
+
                 return flag, arguments
 
         raise ValueError("{} is not a valid {}".format(string, cls.__name__))
@@ -194,4 +199,4 @@ class ApacheFlag(enum.Enum):
         """
         # drops empty strings
         return {flag: arguments for flag, arguments in
-                map(cls.__call__, filter(bool, string.split(',')))}
+                map(cls.look_up, filter(bool, string.split(',')))}
