@@ -7,46 +7,83 @@ from apache_rewrite_tester.rewrite_objects.rule import RewriteRule
 
 __author__ = 'jwilner'
 
+IP_WILDCARD = '*'  # will replace _default_ with this
+PORT_WILDCARD = '*'  # will replace None with this
+
+
+def _parse_apache_ip_string_with_wildcards(string):
+    """
+    :type string: str
+    :rtype: str
+    """
+    return IP_WILDCARD if string == "_default_" else string.strip("[]")
+
 
 class VirtualHost(RewriteObject):
     REGEX = re.compile(r"""
-                       <VirtualHost\s+\*:(?P<port>\d{1,5})>
-                       (?P<body>.+)
+                       <VirtualHost\s+
+                       (?P<ip>
+                       \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|  # IPv4
+                       \[(?:[A-F\d]{1,4}:){7}[A-F\d]{1,4}\]|  # or IPv6
+                       \*|_default_  # or wildcards
+                       ?)
+                       (?::(?P<port>\d{1,5}|\*))>
+                       (?P<body>.+?)
                        </VirtualHost>
                        """, re.VERBOSE | re.DOTALL)
-    SERVER_NAME_REGEX = re.compile(r'ServerName\s+(\S+)')
 
-    def __init__(self, port, body):
-        """
-        :type port: str
-        :type body: str
-        """
-        self.port = port
+    # n.b. port is a string because might be a wildcard
+    PARSERS = ("ip", _parse_apache_ip_string_with_wildcards), ("port", str)
+    DEFAULTS = ('port', PORT_WILDCARD),
 
-        server_name = self.SERVER_NAME_REGEX.search(body)
-        if server_name is None:
-            raise RuntimeError()
+    SERVER_NAME_REGEX = re.compile(r"ServerName\s+(\S+)")
 
-        self.server_name = server_name.group(1)
-
-        self.rewrite_blocks = tuple(self._find_rewrite_blocks(body))
+    DIRECTIVES = RewriteCondition, RewriteRule
 
     @classmethod
-    def _find_rewrite_blocks(cls, body):
+    def _parse(cls, string):
         """
-        :type body: str
-        :rtype: list
+        :type string: str
+        :rtype: dict
         """
-        lines = map(str.strip, body.split('\n'))
-        block = []
+        parsed_dict = super(VirtualHost, cls)._parse(string)
+        if parsed_dict is None:
+            return None
 
-        for line in lines:
-            rewrite_cond = RewriteCondition.parse(line)
-            if rewrite_cond is None:
-                parsed_rule = RewriteRule.parse(line)
-                if parsed_rule is None:
-                    continue
-                yield tuple(block), parsed_rule
-                block = []
-            else:
-                block.append(rewrite_cond)
+        body = parsed_dict.pop("body")
+
+        matches = cls.SERVER_NAME_REGEX.findall(body)
+        if not matches:
+            return None
+        parsed_dict["server_name"], = matches  # blows up if more than one
+
+        body = cls.SERVER_NAME_REGEX.sub("", body)
+
+        parsed_dict["directives"] = tuple(cls._parse_directives(body))
+        return parsed_dict
+
+    @classmethod
+    def _parse_directives(cls, string):
+        for line in map(str.strip, string.splitlines()):
+            for directive in cls.DIRECTIVES:
+                parsed = directive.parse(line)
+                if parsed is not None:
+                    yield parsed
+                    break
+
+    def __init__(self, server_name, port, directives):
+        """
+        :type port: int
+        :type server_name: str
+        :type directives: Iterable[RewriteObject]
+        """
+        self.server_name = server_name
+        self.port = port
+        self.directives = directives
+
+    def apply(self, path, context):
+        """
+        :type path: str
+        :type context: MutableMapping
+        :rtype: str
+        """
