@@ -38,7 +38,7 @@ class TestRewriteConditionParsing(TestCase):
 
         self.assertDictEqual({}, condition.flags)
 
-    def test_match_with_fields(self):
+    def test_match_with_flags(self):
         string = "RewriteCond %{REMOTE_HOST}  ^host1 [OR]"
         condition = RewriteCondition.parse(string)
         self.assertIsNotNone(condition)
@@ -103,3 +103,27 @@ class TestRewriteConditionChaining(TestCase):
         self.assertTrue(result)
         self.assertTrue(cond_1.was_evaluated)
         self.assertTrue(cond_2.was_evaluated)
+
+
+CASES = ("NC", ConditionFlag.NO_CASE), \
+    ("nocasE", ConditionFlag.NO_CASE), \
+    ("or", ConditionFlag.OR_NEXT), \
+    ("ORneXT", ConditionFlag.OR_NEXT), \
+    ("Nv", ConditionFlag.NO_VARY), \
+    ("NoVARY", ConditionFlag.NO_VARY)
+
+
+class TestConditionFlagParsing(TestCase):
+    def test_individual_flags(self):
+        for string, expected_flag in CASES:
+            flag, arguments = ConditionFlag.look_up(string)
+            self.assertIs(expected_flag, flag)
+            self.assertDictEqual({}, arguments)
+
+    def test_find_all(self):
+        string = "NC,Nv,OR"
+        found = list(ConditionFlag.find_all(string).keys())
+        self.assertSequenceEqual((ConditionFlag.NO_CASE,
+                                  ConditionFlag.NO_VARY,
+                                  ConditionFlag.OR_NEXT),
+                                 found)
