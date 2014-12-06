@@ -13,22 +13,18 @@ class RewriteObject(object):
         :type string: str
         :rtype: RewriteObject
         """
-        parsed = cls._parse(string)
-        if parsed is None:
-            return None
-
-        return cls(**parsed)
-
-    @classmethod
-    def _parse(cls, string):
-        """
-        :type string: str
-        :rtype: dict
-        """
         match = cls.REGEX.match(string)
         if match is None:
             return None
 
+        return cls(**cls._parse(match))
+
+    @classmethod
+    def _parse(cls, match):
+        """
+        :type match: __Regex
+        :rtype: dict
+        """
         parsers = dict(cls.PARSERS)
         defaults = dict(cls.DEFAULTS)
 

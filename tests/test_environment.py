@@ -21,7 +21,7 @@ class FakeMatch(object):
         return self._groups[index]
 
 
-class TestUpdateContext(TestCase):
+class TestUpdateEnvironment(TestCase):
     def test_sets_properly(self):
         mapping = {}
         match = FakeMatch(tuple('abc'))

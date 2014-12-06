@@ -41,12 +41,12 @@ class VirtualHost(RewriteObject):
     DIRECTIVES = RewriteCondition, RewriteRule
 
     @classmethod
-    def _parse(cls, string):
+    def _parse(cls, match):
         """
-        :type string: str
+        :type match: __Regex
         :rtype: dict
         """
-        parsed_dict = super(VirtualHost, cls)._parse(string)
+        parsed_dict = super(VirtualHost, cls)._parse(match)
         if parsed_dict is None:
             return None
 
