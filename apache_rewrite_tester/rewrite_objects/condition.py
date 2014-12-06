@@ -68,8 +68,9 @@ class RewriteCondition(RewriteObject):
         :rtype: bool
         """
         string = self.test_string.format(environment)
-        environment_updater = functools.partial(CondBackreference.update_environment,
-                                            environment=environment)
+        environment_updater = \
+            functools.partial(CondBackreference.update_environment,
+                              environment=environment)
 
         flags = re.IGNORECASE if ConditionFlag.NO_CASE in self.flags else 0
         compiler = functools.partial(re.compile, flags=flags)

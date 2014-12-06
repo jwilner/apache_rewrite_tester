@@ -155,7 +155,7 @@ class ServerVariable(enum.Enum):
     def __init__(self, index, variable_type):
         """
         :type index: int
-        :type variable_type: apache_rewrite_tester.environment.ServerVariableType
+        :type variable_type: ServerVariableType
         """
         self.id = index
         self.type = variable_type

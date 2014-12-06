@@ -1,7 +1,8 @@
 import unittest
 
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
-from apache_rewrite_tester.environment import RuleBackreference, CondBackreference
+from apache_rewrite_tester.environment import RuleBackreference, \
+    CondBackreference
 
 __author__ = 'jwilner'
 
