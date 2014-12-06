@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apache_rewrite_tester.context import ServerVariable
+from apache_rewrite_tester.environment import ServerVariable
 from apache_rewrite_tester.rewrite_objects.condition import RewriteCondition, \
     ConditionFlag
 from apache_rewrite_tester.rewrite_objects.pattern import RegexCondPattern
@@ -122,8 +122,7 @@ class TestConditionFlagParsing(TestCase):
 
     def test_find_all(self):
         string = "NC,Nv,OR"
-        found = list(ConditionFlag.find_all(string).keys())
-        self.assertSequenceEqual((ConditionFlag.NO_CASE,
-                                  ConditionFlag.NO_VARY,
-                                  ConditionFlag.OR_NEXT),
-                                 found)
+        found = set(ConditionFlag.find_all(string).keys())
+        self.assertSetEqual({ConditionFlag.NO_CASE, ConditionFlag.NO_VARY,
+                             ConditionFlag.OR_NEXT},
+                            found)

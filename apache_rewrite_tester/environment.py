@@ -18,20 +18,20 @@ class Backreference(collections.Hashable):
         return cls(int(string))
 
     @classmethod
-    def update_context(cls, match, context):
+    def update_environment(cls, match, environment):
         """
         :type match: __Match
-        :type context: MutableMapping
+        :type environment: MutableMapping
         """
         for index in range(cls.MAXIMUM_INDEX):
             backreference = cls(index)
             try:
                 group = match.group(index)
-                context[backreference] = group
+                environment[backreference] = group
             except IndexError:
                 # unset old backreferences
                 try:
-                    del context[backreference]
+                    del environment[backreference]
                 except KeyError:
                     # won't be any for higher indices
                     break
@@ -155,7 +155,7 @@ class ServerVariable(enum.Enum):
     def __init__(self, index, variable_type):
         """
         :type index: int
-        :type variable_type: apache_rewrite_tester.context.ServerVariableType
+        :type variable_type: apache_rewrite_tester.environment.ServerVariableType
         """
         self.id = index
         self.type = variable_type

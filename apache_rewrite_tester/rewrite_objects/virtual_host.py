@@ -81,9 +81,9 @@ class VirtualHost(RewriteObject):
         self.port = port
         self.directives = directives
 
-    def apply(self, path, context):
+    def apply(self, path, environment):
         """
         :type path: str
-        :type context: MutableMapping
+        :type environment: MutableMapping
         :rtype: str
         """

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from apache_rewrite_tester.context import Backreference, CondBackreference, \
+from apache_rewrite_tester.environment import Backreference, CondBackreference, \
     RuleBackreference
 
 __author__ = 'jwilner'
@@ -26,7 +26,7 @@ class TestUpdateContext(TestCase):
         mapping = {}
         match = FakeMatch(tuple('abc'))
 
-        Backreference.update_context(match, mapping)
+        Backreference.update_environment(match, mapping)
 
         backs = dict(zip(map(Backreference, range(3)), "abc"))
 
@@ -38,7 +38,7 @@ class TestUpdateContext(TestCase):
         expected = dict(zip(map(Backreference, range(4)), "abcde"))
         match = FakeMatch(tuple("abcd"))
 
-        Backreference.update_context(match, mapping)
+        Backreference.update_environment(match, mapping)
 
         self.assertEqual(4, len(mapping))
         self.assertDictEqual(expected, mapping)

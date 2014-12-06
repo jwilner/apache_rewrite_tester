@@ -1,6 +1,6 @@
 import re
 
-from apache_rewrite_tester.context import CondBackreference, \
+from apache_rewrite_tester.environment import CondBackreference, \
     RuleBackreference, MapExpansion, ServerVariable
 
 __author__ = 'jwilner'
@@ -46,15 +46,15 @@ class FormatString(object):
         """
         self.components = tuple(components)
 
-    def format(self, context):
+    def format(self, environment):
         """
-        :type context: MutableMapping
+        :type environment: MutableMapping
         :rtype: str
         """
         parts = []
         for component in self.components:
             try:
-                part = context[component]
+                part = environment[component]
             except KeyError:  # it's a string
                 part = component
 

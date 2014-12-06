@@ -1,7 +1,7 @@
 import functools
 import re
 
-from apache_rewrite_tester.context import ApacheFlag, CondBackreference
+from apache_rewrite_tester.environment import ApacheFlag, CondBackreference
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
 from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.pattern import CondPattern
@@ -31,7 +31,7 @@ class RewriteCondition(RewriteObject):
     DEFAULTS = ("flags", {}),
 
     @classmethod
-    def chain(cls, rewrite_conditions, context):
+    def chain(cls, rewrite_conditions, environment):
         """
         :type rewrite_conditions: Iterable[RewriteCondition]
         :rtype: bool
@@ -39,7 +39,7 @@ class RewriteCondition(RewriteObject):
         status = True
 
         for rewrite_condition in rewrite_conditions:
-            status = rewrite_condition.evaluate(context)
+            status = rewrite_condition.evaluate(environment)
 
             if ConditionFlag.OR_NEXT in rewrite_condition.flags:
                 if status:
@@ -62,17 +62,17 @@ class RewriteCondition(RewriteObject):
         self.test_string = test_string
         self.cond_pattern = cond_pattern
 
-    def evaluate(self, context):
+    def evaluate(self, environment):
         """
-        :type context: MutableMapping
+        :type environment: MutableMapping
         :rtype: bool
         """
-        string = self.test_string.format(context)
-        context_updater = functools.partial(CondBackreference.update_context,
-                                            context=context)
+        string = self.test_string.format(environment)
+        environment_updater = functools.partial(CondBackreference.update_environment,
+                                            environment=environment)
 
         flags = re.IGNORECASE if ConditionFlag.NO_CASE in self.flags else 0
         compiler = functools.partial(re.compile, flags=flags)
 
         return self.cond_pattern.match(string, regex_compiler=compiler,
-                                       match_callback=context_updater)
+                                       match_callback=environment_updater)

@@ -1,7 +1,7 @@
 import functools
 import re
 
-from apache_rewrite_tester.context import RuleBackreference, ApacheFlag
+from apache_rewrite_tester.environment import RuleBackreference, ApacheFlag
 from apache_rewrite_tester.rewrite_objects.object import RewriteObject
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
 from apache_rewrite_tester.rewrite_objects.pattern import RegexCondPattern
@@ -82,14 +82,14 @@ class RewriteRule(RewriteObject):
         self.substitution = substitution
         self.flags = flags
 
-    def apply(self, path, context):
+    def apply(self, path, environment):
         """
         :type path: str
-        :type context: MutableMapping
+        :type environment: MutableMapping
         :rtype: str
         """
-        match_callback = functools.partial(RuleBackreference.update_context,
-                                           context=context)
+        match_callback = functools.partial(RuleBackreference.update_environment,
+                                           environment=environment)
 
         flags = re.IGNORECASE if RuleFlag.NO_CASE in self.flags else 0
         compiler = functools.partial(re.compile, flags=flags)
@@ -100,14 +100,14 @@ class RewriteRule(RewriteObject):
         if match is None:  # do not apply substitutions or flags
             return path
 
-        new_path = self.substitution.format(context)
+        new_path = self.substitution.format(environment)
 
-        self._apply_flags(context)
+        self._apply_flags(environment)
 
         return new_path
 
-    def _apply_flags(self, context):
+    def _apply_flags(self, environment):
         """
-        :type context: MutableMapping
+        :type environment: MutableMapping
         """
         pass

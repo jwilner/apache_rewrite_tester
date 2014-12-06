@@ -1,6 +1,6 @@
 import unittest
 
-from apache_rewrite_tester.context import RuleBackreference
+from apache_rewrite_tester.environment import RuleBackreference
 from apache_rewrite_tester.rewrite_objects.rule import RuleFlag, RewriteRule
 
 __author__ = 'jwilner'
