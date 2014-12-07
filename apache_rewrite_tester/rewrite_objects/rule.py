@@ -2,7 +2,7 @@ import functools
 import re
 
 from apache_rewrite_tester.environment import RuleBackreference, ApacheFlag
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
+from apache_rewrite_tester.rewrite_objects.object import SingleLineDirective
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
 from apache_rewrite_tester.rewrite_objects.pattern import RegexCondPattern
 
@@ -58,7 +58,7 @@ class RuleFlag(ApacheFlag):
     TYPE = r"^(?:T|type)=(?P<content_type>[\w/-]+)$",
 
 
-class RewriteRule(RewriteObject):
+class RewriteRule(SingleLineDirective):
     REGEX = re.compile(r"""
                        ^RewriteRule\s+
                        (?P<pattern>\S+)\s+

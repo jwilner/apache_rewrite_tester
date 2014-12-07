@@ -1,14 +1,14 @@
 import re
 
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
-from apache_rewrite_tester.rewrite_objects.condition import \
-    RewriteCondition
+from apache_rewrite_tester.rewrite_objects.object import ContextDirective
+from apache_rewrite_tester.rewrite_objects.condition import RewriteCondition
 from apache_rewrite_tester.rewrite_objects.rule import RewriteRule
+from apache_rewrite_tester.rewrite_objects.simple_directives import \
+    RewriteEngine, ServerName
 
 __author__ = 'jwilner'
 
-IP_WILDCARD = '*'  # will replace _default_ with this
-PORT_WILDCARD = '*'  # will replace None with this
+IP_WILDCARDS = {'*', "__default__"}  # will replace with None
 
 
 def _parse_apache_ip_string_with_wildcards(string):
@@ -16,70 +16,50 @@ def _parse_apache_ip_string_with_wildcards(string):
     :type string: str
     :rtype: str
     """
-    return IP_WILDCARD if string == "_default_" else string.strip("[]")
+    return None if string in IP_WILDCARDS else string.strip("[]")
 
 
-class VirtualHost(RewriteObject):
-    REGEX = re.compile(r"""
-                       <VirtualHost\s+
-                       (?P<ip>
-                       \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|  # IPv4
-                       \[(?:[A-F\d]{1,4}:){7}[A-F\d]{1,4}\]|  # or IPv6
-                       \*|_default_  # or wildcards
-                       ?)
-                       (?::(?P<port>\d{1,5}|\*))>
-                       (?P<body>.+?)
-                       </VirtualHost>
-                       """, re.VERBOSE | re.DOTALL)
+def _parse_port(string):
+    """
+    :type string: str
+    :rtype: int
+    """
+    return int(string) if string.isdigit() else None
 
-    # n.b. port is a string because might be a wildcard
-    PARSERS = ("ip", _parse_apache_ip_string_with_wildcards), ("port", str)
-    DEFAULTS = ('port', PORT_WILDCARD),
 
-    SERVER_NAME_REGEX = re.compile(r"ServerName\s+(\S+)")
+class VirtualHost(ContextDirective):
+    START_REGEX = re.compile(r"""
+                             <VirtualHost\s+
+                             (?P<ip>
+                             \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|  # IPv4
+                             \[(?:[A-F\d]{1,4}:){7}[A-F\d]{1,4}\]|  # or IPv6
+                             \*|_default_  # or wildcards
+                             ?)
+                             (?::(?P<port>\d{1,5}|\*))>
+                             """, re.VERBOSE)
 
-    DIRECTIVES = RewriteCondition, RewriteRule
+    END_REGEX = re.compile(r"</VirtualHost>")
 
-    @classmethod
-    def _parse(cls, match):
+    PARSERS = ("ip", _parse_apache_ip_string_with_wildcards), \
+        ("port", _parse_port)
+
+    DEFAULTS = ('port', None),
+
+    INNER_DIRECTIVE_TYPES = RewriteCondition, RewriteRule, ServerName, \
+        RewriteEngine
+
+    def __init__(self, ip, port, children):
         """
-        :type match: __Regex
-        :rtype: dict
-        """
-        parsed_dict = super(VirtualHost, cls)._parse(match)
-        if parsed_dict is None:
-            return None
-
-        body = parsed_dict.pop("body")
-
-        matches = cls.SERVER_NAME_REGEX.findall(body)
-        if not matches:
-            return None
-        parsed_dict["server_name"], = matches  # blows up if more than one
-
-        body = cls.SERVER_NAME_REGEX.sub("", body)
-
-        parsed_dict["directives"] = tuple(cls._parse_directives(body))
-        return parsed_dict
-
-    @classmethod
-    def _parse_directives(cls, string):
-        for line in map(str.strip, string.splitlines()):
-            for directive in cls.DIRECTIVES:
-                parsed = directive.parse(line)
-                if parsed is not None:
-                    yield parsed
-                    break
-
-    def __init__(self, server_name, port, directives):
-        """
+        :type ip: str
         :type port: int
-        :type server_name: str
-        :type directives: Iterable[RewriteObject]
+        :type children: tuple[SingleLineDirective]
         """
-        self.server_name = server_name
+        super(VirtualHost, self).__init__(children)
+        self.ip = ip
         self.port = port
-        self.directives = directives
+        # blows up if no server name or too many
+        self.server_name, = (directive for directive in children
+                             if isinstance(directive, ServerName))
 
     def apply(self, path, environment):
         """
@@ -87,3 +67,4 @@ class VirtualHost(RewriteObject):
         :type environment: MutableMapping
         :rtype: str
         """
+        pass

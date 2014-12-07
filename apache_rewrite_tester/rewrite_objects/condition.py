@@ -3,7 +3,7 @@ import re
 
 from apache_rewrite_tester.environment import ApacheFlag, CondBackreference
 from apache_rewrite_tester.rewrite_objects.format_string import FormatString
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
+from apache_rewrite_tester.rewrite_objects.object import SingleLineDirective
 from apache_rewrite_tester.rewrite_objects.pattern import CondPattern
 
 
@@ -16,7 +16,7 @@ class ConditionFlag(ApacheFlag):
     NO_VARY = r"^(?:NV|novary)$",
 
 
-class RewriteCondition(RewriteObject):
+class RewriteCondition(SingleLineDirective):
     REGEX = re.compile(r"""
                        ^RewriteCond\s+
                        (?P<test_string>\S+)\s+
