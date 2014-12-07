@@ -2,7 +2,7 @@ import unittest
 
 __author__ = 'jwilner'
 
-from apache_rewrite_tester.utils import expand_includes
+from apache_rewrite_tester.utils import expand_includes, join_continued_lines
 
 
 class TestExpandIncludes(unittest.TestCase):
@@ -90,3 +90,29 @@ man"""
 
         self.assertEqual(expected,
                          expand_includes(string, includes))
+
+
+class TestJoinContinuedLines(unittest.TestCase):
+    def test_lines_are_joined(self):
+        string = """some shitty \\
+continuing \\
+lines
+are on this page"""
+
+        expected = """some shitty continuing lines
+are on this page"""
+
+        self.assertEqual(expected, join_continued_lines(string))
+
+    def test_invalid_raises_value_error(self):
+        string = """some shitty \\"""
+
+        self.assertRaises(ValueError, join_continued_lines, string)
+
+    def test_leaves_stuff_alone(self):
+        string = """leaves
+expected
+stuff
+
+alone"""
+        self.assertEqual(string, join_continued_lines(string))

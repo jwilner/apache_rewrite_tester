@@ -7,6 +7,38 @@ INCLUDE_REGEX = re.compile(r"""^\s*Include(?P<optional>Optional)?\s+
                            re.VERBOSE | re.IGNORECASE)
 
 
+def join_continued_lines(string):
+    """
+    :type string: str
+    :rtype: str
+    """
+    return "\n".join(_join_continued_lines(string.splitlines()))
+
+
+def _join_continued_lines(lines):
+    """
+    :type lines: Iterable[str]
+    :rtype: __generator[str]
+    """
+    previous = []
+    for line in lines:
+        if line.endswith('\\'):
+            previous.append(line[:-1])
+        else:
+            previous.append(line)
+            yield "".join(previous)
+            previous = []
+
+    if previous:
+        raise ValueError("Ended on a continued line.")
+
+
+
+
+
+
+
+
 def expand_includes(string, filenames_to_contents):
     """
     :type string: str
