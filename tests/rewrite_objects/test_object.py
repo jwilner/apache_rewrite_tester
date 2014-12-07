@@ -123,6 +123,7 @@ RewriteEngine on
         self.assertEqual(1, first.a)
         self.assertEqual(2, first.b)
 
-        self.assertEqual("""<Pretend 3-4>
+        self.assertEqual("""
+<Pretend 3-4>
 </Pretend>
 """, remainder)

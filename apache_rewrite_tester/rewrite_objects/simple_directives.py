@@ -26,7 +26,7 @@ class ServerName(SingleLineDirective):
 class RewriteEngine(SingleLineDirective):
     REGEX = re.compile(r"RewriteEngine\s+(?P<on>on|off)")
 
-    PARSERS = ("on", functools.partial(operator.eq, "on"))
+    PARSERS = ("on", functools.partial(operator.eq, "on")),
 
     @classmethod
     def get_default(cls):
