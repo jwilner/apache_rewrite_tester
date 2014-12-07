@@ -62,8 +62,6 @@ def _expand_includes(string, filenames_to_contents):
 
         if contents is not None:
             yield from _expand_includes(contents, filenames_to_contents)
-        elif optional:  # line is dropped
-            continue
-        else:
+        elif not optional:  # line is dropped if optional
             raise KeyError(filename)
 
