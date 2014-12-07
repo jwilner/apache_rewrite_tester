@@ -36,6 +36,17 @@ class RewriteObject(object):
 
 
 class Directive(object):
+    @staticmethod
+    def _get_remainder(string, index):
+        """
+        We want to drop leading whitespace whenever possible.
+
+        :type string: str
+        :type index: int
+        :rtype: str
+        """
+        return string[index:].lstrip()
+
     @classmethod
     def consume(cls, string):
         """
@@ -72,8 +83,7 @@ class SingleLineDirective(MakeableRewriteObject, Directive):
         if match is None:
             return None, string
 
-        remainder = string[match.end():]
-        return cls(**cls._parse(match)), remainder
+        return cls(**cls._parse(match)), cls._get_remainder(string, match.end())
 
 
 class ContextDirective(RewriteObject, Directive):
@@ -88,7 +98,8 @@ class ContextDirective(RewriteObject, Directive):
         :type string: str
         :rtype: (ContextDirective, str)
         """
-        (start_match, end_match), children, string = cls._consume(string)
+        (start_match, end_match), children, string = \
+            cls._consume(string, cls._get_inner_directive_types())
         if start_match is None:
             return None, string
 
@@ -98,7 +109,11 @@ class ContextDirective(RewriteObject, Directive):
         return cls(children=children, **kwargs), string
 
     @classmethod
-    def _consume(cls, string):
+    def _get_inner_directive_types(cls):
+        return cls.INNER_DIRECTIVE_TYPES
+
+    @classmethod
+    def _consume(cls, string, inner_directive_types):
         """
         Get delimiting matches and the internal directives from a string
 
@@ -109,23 +124,23 @@ class ContextDirective(RewriteObject, Directive):
         if start_match is None:
             return (None, None), None, string
 
-        string = string[start_match.end():]
+        string = cls._get_remainder(string, start_match.end())
 
         directives = []
         end_match = cls.END_REGEX.match(string)
         while end_match is None:
-            # starting whitespace will never be significant
-            string = string.lstrip()
             if not string:
                 raise ValueError("Unterminated context directive")
 
-            for inner_directive_type in cls.INNER_DIRECTIVE_TYPES:
-                parsed, string = inner_directive_type.consume(string)
-                if parsed is not None:
-                    directives.append(parsed)
+            for inner_directive_type in inner_directive_types:
+                directive, string = inner_directive_type.consume(string)
+                if directive is not None:
+                    directives.append(directive)
                     break
             else:
-                string = string[1:]  # always advance
+                # always advance, and starting whitespace will never be
+                # significant so lop it off if present
+                string = string[1:].lstrip()
 
             end_match = cls.END_REGEX.match(string)
 
@@ -137,3 +152,9 @@ class ContextDirective(RewriteObject, Directive):
         :type children: tuple[Directive]
         """
         self.children = children
+
+
+class RecursiveContextDirective(ContextDirective):
+    @classmethod
+    def _get_inner_directive_types(cls):
+        return cls.INNER_DIRECTIVE_TYPES + (cls,)
