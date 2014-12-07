@@ -35,12 +35,12 @@ class RewriteObject(object):
         return parsed
 
 
-class _StringConsumer(object):
+class Directive(object):
     @classmethod
     def consume(cls, string):
         """
         :type string: str
-        :rtype: (_StringConsumer, str)
+        :rtype: (Directive, str)
         """
         raise NotImplementedError()
 
@@ -61,7 +61,7 @@ class MakeableRewriteObject(RewriteObject):
         return cls(**cls._parse(match))
 
 
-class SingleLineDirective(MakeableRewriteObject, _StringConsumer):
+class SingleLineDirective(MakeableRewriteObject, Directive):
     @classmethod
     def consume(cls, string):
         """
@@ -76,7 +76,7 @@ class SingleLineDirective(MakeableRewriteObject, _StringConsumer):
         return cls(**cls._parse(match)), remainder
 
 
-class ContextDirective(RewriteObject, _StringConsumer):
+class ContextDirective(RewriteObject, Directive):
     START_REGEX = None
     END_REGEX = None
 
@@ -92,13 +92,18 @@ class ContextDirective(RewriteObject, _StringConsumer):
         if start_match is None:
             return None, string
 
-        return cls(children=children, **cls._parse(start_match)), string
+        kwargs = cls._parse(start_match)
+        kwargs.update(cls._parse(end_match))
+
+        return cls(children=children, **kwargs), string
 
     @classmethod
     def _consume(cls, string):
         """
+        Get delimiting matches and the internal directives from a string
+
         :type string: str
-        :rtype: ((__Regex, __Regex), tuple[RewriteObject], str)
+        :rtype: ((__Match, __Match), tuple[Directive], str)
         """
         start_match = cls.START_REGEX.match(string)
         if start_match is None:
@@ -129,6 +134,6 @@ class ContextDirective(RewriteObject, _StringConsumer):
 
     def __init__(self, children):
         """
-        :type children: tuple[RewriteObject]
+        :type children: tuple[Directive]
         """
         self.children = children
