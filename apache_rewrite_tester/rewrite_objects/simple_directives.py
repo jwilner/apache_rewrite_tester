@@ -1,4 +1,6 @@
+import functools
 import re
+import operator
 
 from apache_rewrite_tester.rewrite_objects.object import SingleLineDirective
 
@@ -22,11 +24,16 @@ class ServerName(SingleLineDirective):
 
 
 class RewriteEngine(SingleLineDirective):
-    REGEX = re.compile(r"RewriteEngine\s+(?P<status>on|off)")
+    REGEX = re.compile(r"RewriteEngine\s+(?P<on>on|off)")
+
+    PARSERS = ("on", functools.partial(operator.eq, "on"))
 
     @classmethod
     def get_default(cls):
-        return RewriteEngine("off")
+        return RewriteEngine(False)
 
-    def __init__(self, status):
-        self.on = status == "on"
+    def __init__(self, on):
+        """
+        :type on: bool
+        """
+        self.on = on

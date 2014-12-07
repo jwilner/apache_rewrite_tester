@@ -8,6 +8,9 @@ from apache_rewrite_tester.rewrite_objects.simple_directives import \
 
 __author__ = 'jwilner'
 
+IP_WILDCARD = "*"
+PORT_WILDCARD = 0
+
 IP_WILDCARDS = {'*', "__default__"}  # will replace with None
 
 
@@ -16,7 +19,7 @@ def _parse_apache_ip_string_with_wildcards(string):
     :type string: str
     :rtype: str
     """
-    return None if string in IP_WILDCARDS else string.strip("[]")
+    return IP_WILDCARD if string in IP_WILDCARDS else string.strip("[]")
 
 
 def _parse_port(string):
@@ -24,7 +27,7 @@ def _parse_port(string):
     :type string: str
     :rtype: int
     """
-    return int(string) if string.isdigit() else None
+    return int(string) if string.isdigit() else PORT_WILDCARD
 
 
 class VirtualHost(ContextDirective):
