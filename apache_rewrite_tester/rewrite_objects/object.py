@@ -2,17 +2,7 @@
 __author__ = 'jwilner'
 
 
-class _StringConsumer(object):
-    @classmethod
-    def consume(cls, string):
-        """
-        :type string: str
-        :rtype: (_StringConsumer, str)
-        """
-        raise NotImplementedError()
-
-
-class _Parser(object):
+class RewriteObject(object):
     DEFAULTS = ()
     PARSERS = ()
 
@@ -45,11 +35,21 @@ class _Parser(object):
         return parsed
 
 
-class RewriteObject(_Parser):
+class _StringConsumer(object):
+    @classmethod
+    def consume(cls, string):
+        """
+        :type string: str
+        :rtype: (_StringConsumer, str)
+        """
+        raise NotImplementedError()
+
+
+class MakeableRewriteObject(RewriteObject):
     REGEX = None
 
     @classmethod
-    def parse(cls, string):
+    def make(cls, string):
         """
         :type string: str
         :rtype: SingleLineDirective
@@ -61,7 +61,7 @@ class RewriteObject(_Parser):
         return cls(**cls._parse(match))
 
 
-class SingleLineDirective(RewriteObject, _StringConsumer):
+class SingleLineDirective(MakeableRewriteObject, _StringConsumer):
     @classmethod
     def consume(cls, string):
         """
@@ -76,7 +76,7 @@ class SingleLineDirective(RewriteObject, _StringConsumer):
         return cls(**cls._parse(match)), remainder
 
 
-class ContextDirective(_Parser, _StringConsumer):
+class ContextDirective(RewriteObject, _StringConsumer):
     START_REGEX = None
     END_REGEX = None
 
@@ -98,7 +98,7 @@ class ContextDirective(_Parser, _StringConsumer):
     def _consume(cls, string):
         """
         :type string: str
-        :rtype: ((__Regex, __Regex), tuple[_Parser], str)
+        :rtype: ((__Regex, __Regex), tuple[RewriteObject], str)
         """
         start_match = cls.START_REGEX.match(string)
         if start_match is None:
@@ -129,6 +129,6 @@ class ContextDirective(_Parser, _StringConsumer):
 
     def __init__(self, children):
         """
-        :type children: tuple[_Parser]
+        :type children: tuple[RewriteObject]
         """
         self.children = children

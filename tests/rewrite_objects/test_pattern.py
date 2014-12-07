@@ -35,7 +35,7 @@ class TestIntegralCondPattern(TestCase):
 
     def test_evaluates_properly(self):
         for string, input_value, result in self.CASES:
-            pattern = IntegralCondPattern.parse(string)
+            pattern = IntegralCondPattern.make(string)
             self.assertIs(result, pattern.match(input_value))
 
 
@@ -45,7 +45,7 @@ class TestLexicographicalCondPattern(TestCase):
 
     def test_evaluates_properly(self):
         for string, input_value, result in self.CASES:
-            pattern = LexicographicalCondPattern.parse(string)
+            pattern = LexicographicalCondPattern.make(string)
             self.assertIs(result, pattern.match(input_value))
 
 
@@ -55,6 +55,6 @@ class TestRegexCondPattern(TestCase):
 
     def test_evaluates_properly(self):
         for string, input_value, result in self.CASES:
-            pattern = RegexCondPattern.parse(string)
+            pattern = RegexCondPattern.make(string)
             self.assertIs(result, pattern.match(input_value))
 

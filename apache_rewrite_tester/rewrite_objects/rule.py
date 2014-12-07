@@ -66,7 +66,7 @@ class RewriteRule(SingleLineDirective):
                        (?:\[(?P<flags>\S+)\])?\s*$
                        """, re.VERBOSE)
 
-    PARSERS = ("pattern", RegexCondPattern.parse), \
+    PARSERS = ("pattern", RegexCondPattern.make), \
               ("substitution", FormatString.parse), \
               ("flags", RuleFlag.find_all)
 

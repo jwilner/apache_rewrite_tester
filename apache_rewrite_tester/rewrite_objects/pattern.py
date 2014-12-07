@@ -1,13 +1,13 @@
 import operator
 import re
 
-from apache_rewrite_tester.rewrite_objects.object import RewriteObject
+from apache_rewrite_tester.rewrite_objects.object import MakeableRewriteObject
 
 
 __author__ = 'jwilner'
 
 
-class CondPattern(RewriteObject):
+class CondPattern(MakeableRewriteObject):
     PRECEDENCE = None
 
     @staticmethod
@@ -19,7 +19,7 @@ class CondPattern(RewriteObject):
         pattern_types = sorted(CondPattern.__subclasses__(),
                                key=lambda cp: int(cp.PRECEDENCE))
         for pattern_type in pattern_types:
-            pattern = pattern_type.parse(string)
+            pattern = pattern_type.make(string)
             if pattern is not None:
                 return pattern
 

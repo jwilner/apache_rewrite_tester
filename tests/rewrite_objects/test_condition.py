@@ -24,7 +24,7 @@ class TestRewriteConditionParsing(TestCase):
         string = \
             "RewriteCond  %{HTTP_USER_AGENT}  !(iPhone|Blackberry|Android)"
 
-        condition = RewriteCondition.parse(string)
+        condition = RewriteCondition.make(string)
         self.assertIsNotNone(condition)
 
         self.assertSequenceEqual((ServerVariable.HTTP_USER_AGENT,),
@@ -40,7 +40,7 @@ class TestRewriteConditionParsing(TestCase):
 
     def test_match_with_flags(self):
         string = "RewriteCond %{REMOTE_HOST}  ^host1 [OR]"
-        condition = RewriteCondition.parse(string)
+        condition = RewriteCondition.make(string)
         self.assertIsNotNone(condition)
         self.assertSequenceEqual((ServerVariable.REMOTE_HOST,),
                                  condition.test_string.components)

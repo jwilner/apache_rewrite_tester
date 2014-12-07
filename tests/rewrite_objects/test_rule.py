@@ -69,7 +69,7 @@ class TestRewriteRuleFlagParsing(unittest.TestCase):
 class TestRewriteRule(unittest.TestCase):
     def test_basic_parsing(self):
         string = "RewriteRule ^/somepath(.*) /otherpath$1"
-        parsed = RewriteRule.parse(string)
+        parsed = RewriteRule.make(string)
 
         self.assertIsNotNone(parsed)
 
@@ -85,7 +85,7 @@ class TestRewriteRule(unittest.TestCase):
 
     def test_parsing_with_flag(self):
         string = "RewriteRule !^/somepath(.*) http://thishost/otherpath$1 [P]"
-        parsed = RewriteRule.parse(string)
+        parsed = RewriteRule.make(string)
 
         self.assertIsNotNone(parsed)
 
