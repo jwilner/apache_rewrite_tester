@@ -18,10 +18,10 @@ class ConditionFlag(ApacheFlag):
 
 class RewriteCondition(SingleLineDirective):
     REGEX = re.compile(r"""
-                       ^RewriteCond\s+
+                       RewriteCond\s+
                        (?P<test_string>\S+)\s+
                        (?P<cond_pattern>\S+)
-                       (?:\s+\[(?P<flags>\S+)\])?$
+                       (?:\s+\[(?P<flags>\S+)\])?
                        """, re.VERBOSE)
 
     PARSERS = ("test_string", FormatString.parse), \

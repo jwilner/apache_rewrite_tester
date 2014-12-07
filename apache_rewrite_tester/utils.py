@@ -7,6 +7,30 @@ INCLUDE_REGEX = re.compile(r"""^\s*Include(?P<optional>Optional)?\s+
                            re.VERBOSE | re.IGNORECASE)
 
 
+class EqualityMixin(object):
+    """
+    http://stackoverflow.com/questions/390250/
+    elegant-ways-to-support-equivalence-equality-in-python-classes
+    """
+    def __eq__(self, other):
+        """
+        Just a useful default, basically for testing.
+        :type other: object
+        :rtype: bool
+        """
+        if type(self) != type(other):
+            return NotImplemented
+
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        """
+        :type other: object
+        :rtype: bool
+        """
+        return not self.__eq__(other)
+
+
 def join_continued_lines(string):
     """
     :type string: str

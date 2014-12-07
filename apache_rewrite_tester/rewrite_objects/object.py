@@ -1,8 +1,9 @@
+from apache_rewrite_tester.utils import EqualityMixin
 
 __author__ = 'jwilner'
 
 
-class RewriteObject(object):
+class RewriteObject(EqualityMixin):
     DEFAULTS = ()
     PARSERS = ()
 

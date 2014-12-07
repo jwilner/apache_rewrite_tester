@@ -60,10 +60,10 @@ class RuleFlag(ApacheFlag):
 
 class RewriteRule(SingleLineDirective):
     REGEX = re.compile(r"""
-                       ^RewriteRule\s+
+                       RewriteRule\s+
                        (?P<pattern>\S+)\s+
-                       (?P<substitution>\S+)\s*?
-                       (?:\[(?P<flags>\S+)\])?\s*$
+                       (?P<substitution>\S+)
+                       (?:\s+\[(?P<flags>\S+)\])?
                        """, re.VERBOSE)
 
     PARSERS = ("pattern", RegexCondPattern.make), \

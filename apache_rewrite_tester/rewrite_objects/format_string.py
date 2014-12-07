@@ -2,11 +2,12 @@ import re
 
 from apache_rewrite_tester.environment import CondBackreference, \
     RuleBackreference, MapExpansion, ServerVariable
+from apache_rewrite_tester.utils import EqualityMixin
 
 __author__ = 'jwilner'
 
 
-class FormatString(object):
+class FormatString(EqualityMixin):
     COMPONENTS = (re.compile(r"^\$(\d)"), RuleBackreference.from_string),\
         (re.compile(r"^%(\d)"), CondBackreference.from_string),\
         (re.compile(r"^\$\{(.+?)\}"), MapExpansion.from_string),\

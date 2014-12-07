@@ -60,9 +60,15 @@ class VirtualHost(ContextDirective):
         super(VirtualHost, self).__init__(children)
         self.ip = ip
         self.port = port
-        # blows up if no server name or too many
-        self.server_name, = (directive for directive in children
-                             if isinstance(directive, ServerName))
+
+        # blows up if too many but use defaults
+        self.server_name, = [directive for directive in children
+                             if isinstance(directive, ServerName)] or (None,)
+
+        self.rewrite_engine, = \
+            [directive for directive in children
+             if isinstance(directive, RewriteEngine)] \
+            or (RewriteEngine.get_default(),)
 
     def apply(self, path, environment):
         """
