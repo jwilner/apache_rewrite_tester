@@ -1,6 +1,6 @@
 import unittest
 import re
-from apache_rewrite_tester.rewrite_objects.object import \
+from apache_rewrite_tester.rewrite_objects.context import \
     RecursiveContextDirective
 from apache_rewrite_tester.rewrite_objects.simple_directives import \
     ServerName, RewriteEngine

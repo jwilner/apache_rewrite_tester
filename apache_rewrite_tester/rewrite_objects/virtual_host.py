@@ -1,6 +1,6 @@
 import re
+from apache_rewrite_tester.rewrite_objects.context import ContextDirective
 
-from apache_rewrite_tester.rewrite_objects.object import ContextDirective
 from apache_rewrite_tester.rewrite_objects.condition import RewriteCondition
 from apache_rewrite_tester.rewrite_objects.rule import RewriteRule
 from apache_rewrite_tester.rewrite_objects.simple_directives import \
@@ -51,6 +51,8 @@ class VirtualHost(ContextDirective):
     INNER_DIRECTIVE_TYPES = RewriteCondition, RewriteRule, ServerName, \
         RewriteEngine
 
+    STRICT_MATCH, WILDCARD_MATCH, NO_MATCH = range(3)
+
     def __init__(self, ip, port, children):
         """
         :type ip: str
@@ -70,10 +72,35 @@ class VirtualHost(ContextDirective):
              if isinstance(directive, RewriteEngine)] \
             or (RewriteEngine.get_default(),)
 
-    def apply(self, path, environment):
+    def match_request(self, ip, port, requested_hostname,
+                      default_server_name):
         """
-        :type path: str
-        :type environment: MutableMapping
-        :rtype: str
+        :type ip: str
+        :type port: int|str
+        :type requested_hostname: str
+        :type default_server_name: str
+        :rtype: (int, int)
         """
-        pass
+        ip_match, port_match, hostname_match = (self.NO_MATCH,) * 2
+
+        if ip == self.ip:
+            ip_match = self.STRICT_MATCH
+        elif self.ip == IP_WILDCARD:
+            ip_match = self.WILDCARD_MATCH
+
+        if IP_WILDCARD in {self.port, port}:
+            port_match = self.WILDCARD_MATCH
+        elif port == self.port:
+            port_match = self.STRICT_MATCH
+
+        # only as good as its weakest link
+        ip_port_match = max(ip_match, port_match)
+
+        server_name = self.server_name \
+            if self.server_name is not None \
+            else default_server_name
+
+        if requested_hostname == server_name:
+            hostname_match = self.STRICT_MATCH
+
+        return ip_port_match, hostname_match
