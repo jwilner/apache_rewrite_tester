@@ -56,7 +56,7 @@ class VirtualHost(ContextDirective):
     def __init__(self, ip, port, children):
         """
         :type ip: str
-        :type port: int
+        :type port: int|str
         :type children: tuple[SingleLineDirective]
         """
         super(VirtualHost, self).__init__(children)
@@ -76,19 +76,19 @@ class VirtualHost(ContextDirective):
                       default_server_name):
         """
         :type ip: str
-        :type port: int|str
+        :type port: int
         :type requested_hostname: str
         :type default_server_name: str
         :rtype: (int, int)
         """
-        ip_match, port_match, hostname_match = (self.NO_MATCH,) * 2
+        ip_match, port_match, hostname_match = (self.NO_MATCH,) * 3
 
         if ip == self.ip:
             ip_match = self.STRICT_MATCH
         elif self.ip == IP_WILDCARD:
             ip_match = self.WILDCARD_MATCH
 
-        if IP_WILDCARD in {self.port, port}:
+        if PORT_WILDCARD in {self.port, port}:
             port_match = self.WILDCARD_MATCH
         elif port == self.port:
             port_match = self.STRICT_MATCH

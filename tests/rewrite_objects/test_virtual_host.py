@@ -43,3 +43,33 @@ class TestVirtualHost(unittest.TestCase):
 
         self.assertEqual(expected, virtual_host)
 
+
+class TestMatchRequest(unittest.TestCase):
+    def test_gets_perfect_match(self):
+        v_host = VirtualHost('joe.wuz.here', 666,
+                             (ServerName('joewuzhere.com'),))
+        match = v_host.match_request('joe.wuz.here', 666, 'joewuzhere.com',
+                                     'blahblahblah')
+        self.assertEqual((VirtualHost.STRICT_MATCH,) * 2, match)
+
+    def test_uses_default(self):
+        v_host = VirtualHost('joe.wuz.here', 666, ())
+        match = v_host.match_request('joe.wuz.here', 666, 'blahblahblah',
+                                     'blahblahblah')
+        self.assertEqual((VirtualHost.STRICT_MATCH,) * 2, match)
+
+    def test_port_wildcard_forces(self):
+        v_host = VirtualHost('joe.wuz.here', 0, (ServerName('joewuzhere.com'),))
+        match = v_host.match_request('joe.wuz.here', 666, 'joewuzhere.com',
+                                     'blahblahblah')
+        self.assertEqual((VirtualHost.WILDCARD_MATCH,
+                          VirtualHost.STRICT_MATCH),
+                         match)
+
+    def test_ip_wildcard_forces(self):
+        v_host = VirtualHost('*', 666, (ServerName('joewuzhere.com'),))
+        match = v_host.match_request('joe.wuz.here', 666, 'joewuzhere.com',
+                                     'blahblahblah')
+        self.assertEqual((VirtualHost.WILDCARD_MATCH,
+                          VirtualHost.STRICT_MATCH),
+                         match)

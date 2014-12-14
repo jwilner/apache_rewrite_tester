@@ -30,7 +30,7 @@ class MainContext(ContextDirective):
     def find_host(self, ip, port, requested_hostname):
         """
         :type ip: str
-        :type port: int|str
+        :type port: int
         :type requested_hostname: str
         :rtype: ContextDirective
         """
