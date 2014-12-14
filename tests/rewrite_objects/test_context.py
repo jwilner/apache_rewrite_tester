@@ -1,6 +1,6 @@
 import unittest
 
-from apache_rewrite_tester.rewrite_objects.context import MainContext
+from apache_rewrite_tester.rewrite_objects.main_context import MainContext
 from apache_rewrite_tester.rewrite_objects.simple_directives import \
     ServerName
 from apache_rewrite_tester.rewrite_objects.virtual_host import \
