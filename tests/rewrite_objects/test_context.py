@@ -1,35 +1,131 @@
+import re
 import unittest
+from apache_rewrite_tester.rewrite_objects.context \
+    import RecursiveContextDirective
 
-from apache_rewrite_tester.rewrite_objects.main_context import MainContext
 from apache_rewrite_tester.rewrite_objects.simple_directives import \
-    ServerName
-from apache_rewrite_tester.rewrite_objects.virtual_host import \
-    VirtualHost
+    ServerName, RewriteEngine
+
 
 __author__ = 'jwilner'
 
 
-class TestMainContextParsing(unittest.TestCase):
-    def test_consumes_properly(self):
-        string = """<VirtualHost *:80>
-    ServerName JoeWuzHere.com
-</VirtualHost>"""
-        main_context, remainder = MainContext.consume(string)
+class PretendContextDirective(RecursiveContextDirective):
+    START_REGEX = re.compile(r"<Pretend (?P<a>\d)-(?P<b>\d)>")
+    END_REGEX = re.compile(r"</Pretend>")
+    INNER_DIRECTIVE_TYPES = ServerName, RewriteEngine
+
+    PARSERS = ('a', int), ('b', int)
+
+    def __init__(self, children, a, b):
+        super(PretendContextDirective, self).__init__(children)
+        self.a = a
+        self.b = b
+
+
+class TestContextDirectiveConsume(unittest.TestCase):
+    def test_unnested(self):
+        string = """<Pretend 1-2>
+ServerName JoeWuzHere
+RewriteEngine on
+</Pretend>"""
+        pretend_context, remainder = PretendContextDirective.consume(string)
 
         self.assertEqual("", remainder)
-        expected = MainContext((VirtualHost.consume(string)[0],))
+        self.assertIsInstance(pretend_context, PretendContextDirective)
 
-        self.assertEqual(expected, main_context)
+        self.assertEqual(1, pretend_context.a)
+        self.assertEqual(2, pretend_context.b)
 
-    def test_consumes_multiple(self):
-        string = """ServerName howza
-<VirtualHost *:80>
-    ServerName JoeWuzHere.com
-</VirtualHost>"""
-        main_context, remainder = MainContext.consume(string)
+        children = pretend_context.children
+        self.assertEqual(2, len(children))
+
+        first, second = children
+
+        self.assertIsInstance(first, ServerName)
+        self.assertEqual(ServerName("JoeWuzHere"), first)
+
+        self.assertIsInstance(second, RewriteEngine)
+        self.assertTrue(second.on)
+
+    def test_raises_value_error(self):
+        string = """<Pretend 1-2>
+ServerName JoeWuzHere
+RewriteEngine on
+"""
+        self.assertRaises(ValueError, PretendContextDirective.consume, string)
+
+    def test_nested(self):
+        string = """<Pretend 1-2>
+<Pretend 3-4>
+ServerName JoeWuzHere
+RewriteEngine on
+</Pretend>
+</Pretend>"""
+        pretend_context, remainder = PretendContextDirective.consume(string)
         self.assertEqual("", remainder)
 
-        server_name, remainder = ServerName.consume(string)
-        virtual_host, remainder = VirtualHost.consume(remainder)
-        expected = MainContext((server_name, virtual_host))
-        self.assertEqual(expected, main_context)
+        self.assertIsInstance(pretend_context, PretendContextDirective)
+        self.assertEqual(1, pretend_context.a)
+        self.assertEqual(2, pretend_context.b)
+
+        children = pretend_context.children
+        self.assertEqual(1, len(children))
+
+        nested, = children
+
+        self.assertIsInstance(nested, PretendContextDirective)
+        self.assertEqual(3, nested.a)
+        self.assertEqual(4, nested.b)
+
+        children = nested.children
+        self.assertEqual(2, len(children))
+
+        first, second = nested.children
+
+        self.assertIsInstance(first, ServerName)
+        self.assertEqual(ServerName("JoeWuzHere"), first)
+
+        self.assertIsInstance(second, RewriteEngine)
+        self.assertTrue(second.on)
+
+    def test_handles_empty_ok(self):
+        string = """<Pretend 1-2>
+<Pretend 3-4>
+</Pretend>
+</Pretend>"""
+        pretend_context, remainder = PretendContextDirective.consume(string)
+        self.assertEqual("", remainder)
+
+        self.assertIsInstance(pretend_context, PretendContextDirective)
+        self.assertEqual(1, pretend_context.a)
+        self.assertEqual(2, pretend_context.b)
+
+        children = pretend_context.children
+        self.assertEqual(1, len(children))
+
+        nested, = children
+
+        self.assertIsInstance(nested, PretendContextDirective)
+        self.assertEqual(3, nested.a)
+        self.assertEqual(4, nested.b)
+
+        self.assertSequenceEqual((), nested.children)
+
+    def test_handles_consecutive_ok(self):
+        string = """<Pretend 1-2>
+
+</Pretend>
+<Pretend 3-4>
+</Pretend>
+"""
+        first, remainder = PretendContextDirective.consume(string)
+
+        self.assertIsInstance(first, PretendContextDirective)
+        self.assertEqual(1, first.a)
+        self.assertEqual(2, first.b)
+
+        self.assertEqual("""
+<Pretend 3-4>
+</Pretend>
+""", remainder)
