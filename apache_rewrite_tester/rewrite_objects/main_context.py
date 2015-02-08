@@ -49,6 +49,9 @@ class MainContext(ContextDirective, RequestHandler):
         virtual_hosts = tuple(directive for directive in self.children
                               if isinstance(directive, VirtualHost))
 
+        if not virtual_hosts:
+            return self
+
         matches = (v_host.match_request(ip, port, requested_hostname)
                    for v_host in virtual_hosts)
 
@@ -61,11 +64,12 @@ class MainContext(ContextDirective, RequestHandler):
         rankings = zip(ip_port_matches, safe_name_matches)
 
         # sort by rankings
-        ranked_hosts = sorted(zip(virtual_hosts, rankings), key=lambda k: k[1])
+        ranked_hosts = sorted(zip(virtual_hosts, rankings), key=lambda k: k[1],
+                              reverse=True)
 
         # only hosts that matched on IP and port at all are acceptable
         filtered_hosts = (host for host, (ip_port_match, _) in ranked_hosts
-                          if ip_port_match < MatchType.NONE)
+                          if ip_port_match > MatchType.NONE)
 
         return next(filtered_hosts, self)
 
@@ -79,6 +83,5 @@ class MainContext(ContextDirective, RequestHandler):
         :type context: MutableMapping
         :rtype: str
         """
-        host = self.find_host(ip, port, request.headers['host'])
-
+        pass
 

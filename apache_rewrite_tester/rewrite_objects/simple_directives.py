@@ -31,6 +31,9 @@ class ServerName(SingleLineDirective):
     def __init__(self, server_name):
         self.server_name = server_name
 
+    def __repr__(self):
+        return "{0.__class__.__name__}({0.server_name})".format(self)
+
 
 class NameVirtualHost(SingleLineDirective):
     REGEX = re.compile(r"NameVirtualHost\s+(?P<ip_address>\S+)")

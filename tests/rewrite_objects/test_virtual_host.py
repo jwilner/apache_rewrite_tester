@@ -67,7 +67,7 @@ class TestMatchRequest(unittest.TestCase):
         match = v_host.match_request(IpWildcardPattern('joe.wuz.here'),
                                      PortWildcardPattern(666),
                                      'blahblahblah')
-        self.assertEqual((MatchType.STRICT,) * 2, match)
+        self.assertEqual((MatchType.STRICT, None), match)
 
     def test_port_wildcard_forces(self):
         v_host = VirtualHost(IpWildcardPattern('joe.wuz.here'),

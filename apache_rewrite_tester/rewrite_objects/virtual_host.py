@@ -11,9 +11,6 @@ from apache_rewrite_tester.rewrite_objects.simple_directives import \
 from apache_rewrite_tester.utils import compare
 
 
-__author__ = 'jwilner'
-
-
 class VirtualHost(RequestHandler, ContextDirective):
     START_REGEX = re.compile(r"""
                              <VirtualHost\s+
@@ -46,13 +43,16 @@ class VirtualHost(RequestHandler, ContextDirective):
         self.ip = ip
         self.port = port
 
-        # blows up if too many but use defaults
         self.server_name, = [directive for directive in children
                              if isinstance(directive, ServerName)] or (None,)
 
         self.rewrite_engine, = [directive for directive in children
                                 if isinstance(directive, RewriteEngine)] \
             or (RewriteEngine.get_default(),)
+
+    def __repr__(self):
+        return "<{0.__class__.__name__}: " \
+               "({0.server_name!r}, {0.ip!r}, {0.port!r})>".format(self)
 
     def match_request(self, ip, port, requested_hostname):
         """
@@ -70,4 +70,5 @@ class VirtualHost(RequestHandler, ContextDirective):
         if self.server_name is None:
             return ip_port_match, None
 
-        return ip_port_match, compare(self.server_name, requested_hostname)
+        return ip_port_match, compare(self.server_name,
+                                      ServerName(requested_hostname))

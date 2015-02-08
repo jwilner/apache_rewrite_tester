@@ -27,7 +27,7 @@ def _parse_port_with_wildcards(string):
 
 
 class PortWildcardPattern(KeyedEqualityMixin, MakeableRewriteObject):
-    REGEX = re.compile(r"(P<port>\d{3,5}|\*)")
+    REGEX = re.compile(r"(?P<port>\d{2,5}|\*)")
 
     PARSERS = ("port", _parse_port_with_wildcards),
 
@@ -36,13 +36,17 @@ class PortWildcardPattern(KeyedEqualityMixin, MakeableRewriteObject):
     def __init__(self, port):
         self.equality_key = self.port = port
 
+    def __repr__(self):
+        return "{0.__class__.__name__}({0.port})".format(self)
+
 
 class IpWildcardPattern(KeyedEqualityMixin, MakeableRewriteObject):
     REGEX = re.compile(r"""
-                       (P<ip_address>
-                       \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|  # IPv4
-                       \[(?:[A-F\d]{1,4}:){7}[A-F\d]{1,4}\]|  # or IPv6
-                       \*|_default_  # or wildcards
+                       (?P<ip_address>
+                       (?:\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|  # IPv4
+                       (?:\[(?:[A-F\d]{1,4}:){7}[A-F\d]{1,4}\])|  # or IPv6
+                       \*|
+                       _default_  # or wildcards
                        )
                        """, re.VERBOSE)
 
@@ -52,3 +56,6 @@ class IpWildcardPattern(KeyedEqualityMixin, MakeableRewriteObject):
 
     def __init__(self, ip_address):
         self.equality_key = self.ip_address = ip_address
+
+    def __repr__(self):
+        return "{0.__class__.__name__}({0.ip_address})".format(self)

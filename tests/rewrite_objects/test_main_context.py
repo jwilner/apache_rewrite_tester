@@ -13,13 +13,17 @@ DEFAULT_SERVER_NAME = ServerName("joe.wuznt.here")
 
 class TestMainContextParsing(unittest.TestCase):
     def test_consumes_properly(self):
-        string = """<VirtualHost *:80>
+        string = """ServerName joe.wuznt.here
+<VirtualHost *:80>
     ServerName JoeWuzHere.com
 </VirtualHost>"""
         main_context, remainder = MainContext.consume(string)
 
         self.assertEqual("", remainder)
-        expected = MainContext((VirtualHost.consume(string)[0],))
+        expected = MainContext((DEFAULT_SERVER_NAME,
+                                VirtualHost(IpWildcardPattern("*"),
+                                            PortWildcardPattern(80),
+                                            (ServerName("JoeWuzHere.com"),))))
 
         self.assertEqual(expected, main_context)
 
@@ -39,7 +43,7 @@ class TestMainContextParsing(unittest.TestCase):
 
 class TestFindHost(unittest.TestCase):
     def test_returns_self(self):
-        mc = MainContext(())
+        mc = MainContext((DEFAULT_SERVER_NAME,))
         self.assertIs(mc, mc.find_host(IpWildcardPattern('blha.blah'),
                                        PortWildcardPattern(92),
                                        'blah.com'))
@@ -49,9 +53,10 @@ class TestFindHost(unittest.TestCase):
                         ())
         b = VirtualHost(IpWildcardPattern('bob.bob'), PortWildcardPattern(92),
                         ())
-        result = MainContext((a, b)).find_host(IpWildcardPattern('bob.bob'),
-                                               PortWildcardPattern(92),
-                                               'some_shit')
+        context = MainContext((DEFAULT_SERVER_NAME, a, b))
+
+        result = context.find_host(IpWildcardPattern('bob.bob'),
+                                   PortWildcardPattern(92), 'some_shit')
         self.assertIs(a, result)
 
     def test_prefers_no_wildcards(self):
