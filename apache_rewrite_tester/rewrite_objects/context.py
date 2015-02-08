@@ -1,3 +1,5 @@
+import requests
+
 from apache_rewrite_tester.rewrite_objects.object import RewriteObject, \
     Directive
 
@@ -76,3 +78,15 @@ class RecursiveContextDirective(ContextDirective):
     @classmethod
     def _get_inner_directive_types(cls):
         return cls.INNER_DIRECTIVE_TYPES + (cls,)
+
+
+class RequestHandler(object):
+
+    def handle_request(self, ip, port, request, context):
+        """
+        :type ip: IpWildcardPattern
+        :type port: PortWildcardPattern
+        :type request: requests.Request
+        :type context: MutableMapping
+        """
+        raise NotImplementedError()

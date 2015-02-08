@@ -3,8 +3,12 @@ import unittest
 from apache_rewrite_tester.rewrite_objects.main_context import MainContext
 from apache_rewrite_tester.rewrite_objects import VirtualHost
 from apache_rewrite_tester.rewrite_objects.simple_directives import ServerName
+from apache_rewrite_tester.rewrite_objects.ip_and_port import \
+    IpWildcardPattern, PortWildcardPattern
 
 __author__ = 'jwilner'
+
+DEFAULT_SERVER_NAME = ServerName("joe.wuznt.here")
 
 
 class TestMainContextParsing(unittest.TestCase):
@@ -36,29 +40,47 @@ class TestMainContextParsing(unittest.TestCase):
 class TestFindHost(unittest.TestCase):
     def test_returns_self(self):
         mc = MainContext(())
-        self.assertIs(mc, mc.find_host('blha.blah', 92, 'blah.com'))
+        self.assertIs(mc, mc.find_host(IpWildcardPattern('blha.blah'),
+                                       PortWildcardPattern(92),
+                                       'blah.com'))
 
     def test_returns_first_of_a_tie(self):
-        a = VirtualHost('bob.bob', 92, ())
-        b = VirtualHost('bob.bob', 92, ())
-        result = MainContext((a, b)).find_host('bob.bob', 92, 'some_shit')
+        a = VirtualHost(IpWildcardPattern('bob.bob'), PortWildcardPattern(92),
+                        ())
+        b = VirtualHost(IpWildcardPattern('bob.bob'), PortWildcardPattern(92),
+                        ())
+        result = MainContext((a, b)).find_host(IpWildcardPattern('bob.bob'),
+                                               PortWildcardPattern(92),
+                                               'some_shit')
         self.assertIs(a, result)
 
     def test_prefers_no_wildcards(self):
-        a = VirtualHost('*', 80, ())
-        b = VirtualHost('bob.bob', 80, ())
-        result = MainContext((a, b)).find_host('bob.bob', 80, 'some_shit')
+        a = VirtualHost(IpWildcardPattern(IpWildcardPattern.WILDCARD),
+                        PortWildcardPattern(80), ())
+        b = VirtualHost(IpWildcardPattern('bob.bob'), PortWildcardPattern(80),
+                        ())
+        result = MainContext((DEFAULT_SERVER_NAME, a, b))\
+            .find_host(IpWildcardPattern('bob.bob'), PortWildcardPattern(80),
+                       'some_shit')
         self.assertIs(b, result)
 
     def test_tries_server_name_to_break_tie(self):
-        a = VirtualHost('*', 80, (ServerName('not.a.match'),))
-        b = VirtualHost('*', 80, (ServerName('a.match'),))
-        result = MainContext((a, b)).find_host('bob.bob', 80, 'a.match')
+        a = VirtualHost(IpWildcardPattern(IpWildcardPattern.WILDCARD),
+                        PortWildcardPattern(80), (ServerName('not.a.match'),))
+        b = VirtualHost(IpWildcardPattern(IpWildcardPattern.WILDCARD),
+                        PortWildcardPattern(80), (ServerName('a.match'),))
+        result = MainContext((DEFAULT_SERVER_NAME, a, b))\
+            .find_host(IpWildcardPattern('bob.bob'), PortWildcardPattern(80),
+                       'a.match')
         self.assertIs(b, result)
 
     def disregards_complete_non_matches(self):
-        a = VirtualHost("china", 80, (ServerName('japan'),))
-        b = VirtualHost('*', 80, (ServerName('a.match'),))
-        result = MainContext((a, b)).find_host('bob.bob', 80, 'something-else')
+        a = VirtualHost(IpWildcardPattern("china"), PortWildcardPattern(80),
+                        (ServerName('japan'),))
+        b = VirtualHost(IpWildcardPattern(IpWildcardPattern.WILDCARD),
+                        PortWildcardPattern(80), (ServerName('a.match'),))
+        result = MainContext((DEFAULT_SERVER_NAME, a, b))\
+            .find_host(IpWildcardPattern('bob.bob'), PortWildcardPattern(80),
+                       'something-else')
         self.assertIs(b, result)
 

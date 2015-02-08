@@ -1,14 +1,18 @@
 import re
-from apache_rewrite_tester.rewrite_objects import VirtualHost, RewriteCondition, \
-    RewriteRule
-from apache_rewrite_tester.rewrite_objects.context import ContextDirective
+
+from apache_rewrite_tester.rewrite_objects import VirtualHost, \
+    RewriteCondition, RewriteRule
+from apache_rewrite_tester.rewrite_objects.context import ContextDirective, \
+    RequestHandler
 from apache_rewrite_tester.rewrite_objects.simple_directives import \
     RewriteEngine, ServerName
+from apache_rewrite_tester.utils import MatchType, compare
+
 
 __author__ = 'jwilner'
 
 
-class MainContext(ContextDirective):
+class MainContext(ContextDirective, RequestHandler):
     INNER_DIRECTIVE_TYPES = VirtualHost, RewriteCondition, RewriteRule, \
         RewriteEngine, ServerName
 
@@ -22,30 +26,59 @@ class MainContext(ContextDirective):
         """
         super(MainContext, self).__init__(children)
 
-        server_names = [directive for directive in children
-                        if isinstance(directive, ServerName)] or [None]
-        # the last defined server name is used.
-        self.server_name = server_names[-1]
+        # the last server name defined in the main context is used.
+        self.server_name = next((directive for directive in reversed(children)
+                                 if isinstance(directive, ServerName)),
+                                None)
+
+        if self.server_name is None:
+            raise ValueError("Backwards ip lookup or whatever not supported.")
+
+        # self.name_virtual_hosts = {directive for directive in children
+        #                            if isinstance(directive, NameVirtualHost)}
 
     def find_host(self, ip, port, requested_hostname):
         """
-        :type ip: str
-        :type port: int
+        :type ip: IpWildcardPattern
+        :type port: PortWildcardPattern
         :type requested_hostname: str
         :rtype: ContextDirective
         """
+        default_name_match = compare(requested_hostname, self.server_name)
+
         virtual_hosts = tuple(directive for directive in self.children
                               if isinstance(directive, VirtualHost))
 
-        rankings = (v_host.match_request(ip, port, requested_hostname,
-                                         self.server_name)
-                    for v_host in virtual_hosts)
+        matches = (v_host.match_request(ip, port, requested_hostname)
+                   for v_host in virtual_hosts)
+
+        ip_port_matches, name_matches = zip(*matches)
+
+        safe_name_matches = [(name_match if name_match is not None
+                              else default_name_match)
+                             for name_match in name_matches]
+
+        rankings = zip(ip_port_matches, safe_name_matches)
 
         # sort by rankings
         ranked_hosts = sorted(zip(virtual_hosts, rankings), key=lambda k: k[1])
 
-        # return the best matching that matches at all for ip, else return self
-        # as default
-        return next((host for host, (ip_match, name_match) in ranked_hosts
-                     if ip_match < VirtualHost.NO_MATCH),
-                    self)
+        # only hosts that matched on IP and port at all are acceptable
+        filtered_hosts = (host for host, (ip_port_match, _) in ranked_hosts
+                          if ip_port_match < MatchType.NONE)
+
+        return next(filtered_hosts, self)
+
+    def handle_request(self, ip, port, request, context):
+        """
+        Given a request, return a rewritten url.
+
+        :type ip: IpWildcardPattern
+        :type port: PortWildcardPattern
+        :type request: HTTPRequest
+        :type context: MutableMapping
+        :rtype: str
+        """
+        host = self.find_host(ip, port, request.headers['host'])
+
+
