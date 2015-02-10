@@ -54,10 +54,10 @@ class FormatString(EqualityMixin):
         """
         parts = []
         for component in self.components:
-            try:
+            if isinstance(str, component):
+                part = component  # it's a literal
+            else:
                 part = environment[component]
-            except KeyError:  # it's a string
-                part = component
 
             parts.append(part)
 

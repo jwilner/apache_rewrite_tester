@@ -6,6 +6,21 @@ import enum
 __author__ = 'jwilner'
 
 
+def _make_header_value_extractor(header_key):
+    """
+    :type header_key: str
+    :rtype: (HTTPRequest) -> str
+    """
+    def extract_value(request):
+        """
+        :type request: HTTPRequest
+        :rtype: str
+        """
+        return request.headers[header_key]
+
+    return extract_value
+
+
 class Backreference(collections.Hashable):
     MAXIMUM_INDEX = 10  # exclusive
 
@@ -102,13 +117,19 @@ class ServerVariableType(enum.Enum):
 
 
 class ServerVariable(enum.Enum):
-    HTTP_ACCEPT = 0, ServerVariableType.HTTP_HEADERS
-    HTTP_COOKIE = 1, ServerVariableType.HTTP_HEADERS
+    HTTP_ACCEPT = 0, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("Accept")
+    HTTP_COOKIE = 1, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("Cookie")
     HTTP_FORWARDED = 2, ServerVariableType.HTTP_HEADERS
-    HTTP_HOST = 3, ServerVariableType.HTTP_HEADERS
-    HTTP_PROXY_CONNECTION = 4, ServerVariableType.HTTP_HEADERS
-    HTTP_REFERER = 5, ServerVariableType.HTTP_HEADERS
-    HTTP_USER_AGENT = 6, ServerVariableType.HTTP_HEADERS
+    HTTP_HOST = 3, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("Host")
+    HTTP_PROXY_CONNECTION = 4, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("Proxy-Connection")
+    HTTP_REFERER = 5, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("Referer")
+    HTTP_USER_AGENT = 6, ServerVariableType.HTTP_HEADERS, \
+        _make_header_value_extractor("User-String")
 
     AUTH_TYPE = 7, ServerVariableType.CONNECTION_AND_REQUEST
     CONN_REMOTE_ADDR = 8, ServerVariableType.CONNECTION_AND_REQUEST
@@ -152,13 +173,14 @@ class ServerVariable(enum.Enum):
     REQUEST_URI = 43, ServerVariableType.SPECIALS
     THE_REQUEST = 44, ServerVariableType.SPECIALS
 
-    def __init__(self, index, variable_type):
+    def __init__(self, index, variable_type, extractor=None):
         """
         :type index: int
         :type variable_type: ServerVariableType
         """
         self.id = index
         self.type = variable_type
+        self.extract = extractor
 
 
 class ApacheFlag(enum.Enum):
@@ -200,3 +222,22 @@ class ApacheFlag(enum.Enum):
         # drops empty strings
         return {flag: arguments for flag, arguments in
                 map(cls.look_up, filter(bool, string.split(',')))}
+
+
+
+class Environment(collections.MutableMapping):
+    def __getitem__(self, key):
+        pass
+
+    def __iter__(self):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __setitem__(self, key, value):
+        pass
+
+    def __delitem__(self, key):
+        pass
+

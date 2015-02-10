@@ -82,11 +82,9 @@ class RecursiveContextDirective(ContextDirective):
 
 class RequestHandler(object):
 
-    def handle_request(self, ip, port, request, context):
+    def handle_request(self, request, environment):
         """
-        :type ip: IpWildcardPattern
-        :type port: PortWildcardPattern
         :type request: requests.Request
-        :type context: MutableMapping
+        :type environment: MutableMapping
         """
         raise NotImplementedError()

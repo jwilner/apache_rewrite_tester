@@ -73,15 +73,12 @@ class MainContext(ContextDirective, RequestHandler):
 
         return next(filtered_hosts, self)
 
-    def handle_request(self, ip, port, request, context):
+    def handle_request(self, request, environment):
         """
         Given a request, return a rewritten url.
 
-        :type ip: IpWildcardPattern
-        :type port: PortWildcardPattern
         :type request: HTTPRequest
-        :type context: MutableMapping
+        :type environment: MutableMapping
         :rtype: str
         """
-        pass
-
+        path = request.path
